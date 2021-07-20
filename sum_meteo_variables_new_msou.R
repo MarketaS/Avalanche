@@ -194,9 +194,9 @@ summary(g_SCE)
 #gt_SCE_C = glm(event ~ SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = adcast_c, family = 'binomial')
 #summary(gt_SCE_C)
 g_T = glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = adcast, family = 'binomial')
-summary(gt_T)
+summary(g_T)
 g_SRA1H = glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = adcast, family = 'binomial')
-summary (g_SRA1H )
+summary(g_SRA1H)
 g_SVH <-glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = adcast_W, family = 'binomial')
 summary(g_SVH)
 g_SNO <-glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = adcast_W, family = 'binomial')
@@ -205,7 +205,7 @@ g_SSV1H <-glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value7
 summary(g_SSV1H)
 
 # selection from all available variables the best predictors for warm events
-dta = data.table (adcast_W)
+dta = data.table(adcast_W)
 candi = names(dta)[-1]
 nn = length(candi)
 new_candi = candi[5:nn]
@@ -215,7 +215,7 @@ for (i in 1:length(new_candi)){
   M[[i]] = lm(dta$event ~ dta[[new_candi[i]]])# the  predictor
 }
 
-sM = data.table(new_candi, aic = lapply(M, AIC), lapply(M, function(x)summary(x)$coe[2,4] ))
+sM = data.table(new_candi, aic = lapply(M, AIC), lapply(M, function(x)summary(x)$coe[2,3]))
 sM[, aic := unlist(aic)]
 sM[, V3 := unlist(V3)]
 
@@ -226,10 +226,11 @@ candi = candi[candi!='SVH_value']
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
+  print(i)
   M2[[i]] = lm(dta$event ~ dta$SVH_value + dta[[new_candi[i]]] )
 }
 
-sM2 = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[3,4] ))
+sM2 = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[2,3]))
 sM2[, aic := unlist(aic)]
 sM2[, V3 := unlist(V3)]
 
@@ -242,10 +243,11 @@ candi = candi[candi!='SNO_value48']
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
+  print(i)
   M3[[i]] = lm(dta$event ~ dta$SVH_value + dta$SNO_value48 + dta[[new_candi[i]]] )#building of already selected variables and others
 }
 
-sM3 = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[3,4] ))# i am not sure what position is coe [3,4]
+sM3 = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[2,3]))# i am not sure what position is coe [3,4]
 sM3[, aic := unlist(aic)]
 sM3[, V3 := unlist(V3)]
 #write_xlsx(sM3, 'sM3.xlsx')
@@ -257,11 +259,12 @@ candi = candi[candi!='T_value24'] # eliminate already chosen predictor
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
+  print(i)
   M4[[i]] = lm(dta$event ~ dta$SVH_value +  + dta$SNO_value48 + dta$T_value24 + dta[[new_candi[i]]] )
 }
 
-sM4 = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[3,4] ))
-sM4[, abs(aic := unlist(aic))]
+sM4 = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,3]))
+sM4[, aic := unlist(aic)]
 sM4[, V3 := unlist(V3)]
 #write_xlsx(sM4, 'sM4.xlsx')
 
@@ -272,12 +275,12 @@ candi = candi[candi!='SRA1H_value120'] #eliminate already chosen predictor
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
+  print(i)
   M5[[i]] = lm(dta$event ~ dta$SVH_value +  + dta$SNO_value48 + dta$T_value24 + dta$SRA1H_value120 + dta[[new_candi[i]]] )
 }
 
-sM5 = data.table(new_candi, aic = lapply(M5, AIC), lapply(M5, function(x)summary(x)$coe[3,4] ))
+sM5 = data.table(new_candi, aic = lapply(M5, AIC), lapply(M5, function(x)summary(x)$coe[2,3]))
 sM5[, aic := unlist(aic)]
-
 sM5[, V3 := unlist(V3)]
 #write_xlsx(sM5, 'sM5.xlsx')
 
@@ -288,13 +291,17 @@ candi = candi[candi!='SRA1H_value120'] #eliminate already chosen predictor
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
+  print(i)
   M6[[i]] = lm(dta$event ~ dta$SVH_value +  + dta$SNO_value48 + dta$T_value24 + dta$SRA1H_value120 + dta$SSV1H_value72 + dta[[new_candi[i]]] )
 }# best predictors for LOWEST AIC right now - dont know how to incorporate significant p value - right now I have mostly 0 p value
 
-sM6 = data.table(new_candi, aic = lapply(M6, AIC), lapply(M6, function(x)summary(x)$coe[3,4] ))
+sM6 = data.table(new_candi, aic = lapply(M6, AIC), lapply(M6, function(x)summary(x)$coe[2,3]))
 sM6[, aic := unlist(aic)]
 sM6[, V3 := unlist(V3)]
 write_xlsx(sM6, 'sM6.xlsx')
+
+all_aic <- list(sm = sM, sm2 = sM2, sm3 = sM3, sm4 = sM4, sm5 = sM5, sm6 = sM6)
+saveRDS(all_aic, "./data/all_aic.rds")
 
 # selection from all available variables the best predictors for cold events
 dta = data.table (adcast_C)
