@@ -5,7 +5,7 @@ library(lubridate)
 library(writexl)
 library(dplyr)  
 library(zoo)
-setwd ("c:/Users/marketa.souckova/Documents/laviny/")
+setwd("D:/MARKETA/git_marketa/Avalanche/")
 ######### READ DATA ######################
 # loading the avalanche data (0: NAd,1: Ad)
 Aval <- data.table(read_delim("./data/Aval_utf_8.txt", 
@@ -124,6 +124,20 @@ for (i in c(1:length(hours))){
   gc()
   print(hours[i])
 }
+
+####### TDIFF add-on to dta_melt ############ 
+
+aaa <- dta_melt[variable == "T",.(DATE2, CAW, variable, value)]
+aaa[, variable:= "Tdiff"]
+hours <-  c(24,48,72,96,120,144)
+for (i in c(1:length(hours))){
+  colname <- paste0("value", hours[i])
+  aaa[, c(colname) := rollapply(data = value, width = hours[i], FUN = function(X){X[length(X)] - X[1]}, align = "right", fill = NA)]
+  print(hours[i])
+}
+
+dta_melt <- rbind(dta_melt, aaa)
+
 saveRDS(object = dta_melt, file = "data/dta_melt_CAW.rds")
 dta_melt <- readRDS(file = "data/dta_melt_CAW.rds")
 # from rolling means we cut 6 days prior the avalanche event
@@ -238,7 +252,7 @@ sM3[, V3 := unlist(V3)]
 
 M4 = list()
 candi = candi[candi!='SVH_value']
-candi = candi[candi!='T_value24']* eliminate already chosen predictor
+candi = candi[candi!='T_value24'] # eliminate already chosen predictor
 
 nn = length(candi)
 new_candi = candi[5:nn]
@@ -335,17 +349,17 @@ for (i in 1:length(new_candi)){
 }
 
 #g3 = glm(event ~ SCE_value24 + SNO_value24 + SVH_value24 + H_value24 + D_value24 + Fprum_value24 + Fmax_value24 + T_value24 +  SRA1H_value24 + SSV1H_value24 + T05_value24 +
-           SCE_value48 + SNO_value48 + SVH_value48 + H_value48 + D_value48 + Fprum_value48 + Fmax_value48 + T_value48 +  SRA1H_value48 + SSV1H_value48 + T05_value48 +
-           SCE_value72 + SNO_value72 + SVH_value72 + H_value72 + D_value72 + Fprum_value72 + Fmax_value72 + T_value72 +  SRA1H_value72 + SSV1H_value72 + T05_value72 +
-           SCE_value96 + SNO_value96 + SVH_value96 + H_value96 + D_value96 + Fprum_value96 + Fmax_value96 + T_value96 +  SRA1H_value96 + SSV1H_value96 + T05_value96 +
-           SCE_value120 + SNO_value120 + SVH_value120 + H_value120 + D_value120 + Fprum_value120 + Fmax_value120 + T_value120 +  SRA1H_value120 + SSV1H_value120 + T05_value120, data = adcast_W, family = 'binomial')
+#           SCE_value48 + SNO_value48 + SVH_value48 + H_value48 + D_value48 + Fprum_value48 + Fmax_value48 + T_value48 +  SRA1H_value48 + SSV1H_value48 + T05_value48 +
+#           SCE_value72 + SNO_value72 + SVH_value72 + H_value72 + D_value72 + Fprum_value72 + Fmax_value72 + T_value72 +  SRA1H_value72 + SSV1H_value72 + T05_value72 +
+#           SCE_value96 + SNO_value96 + SVH_value96 + H_value96 + D_value96 + Fprum_value96 + Fmax_value96 + T_value96 +  SRA1H_value96 + SSV1H_value96 + T05_value96 +
+#           SCE_value120 + SNO_value120 + SVH_value120 + H_value120 + D_value120 + Fprum_value120 + Fmax_value120 + T_value120 +  SRA1H_value120 + SSV1H_value120 + T05_value120, data = adcast_W, family = 'binomial')
 #summary (g3)
 
 #g2 = glm(event ~ SCE_value24 + SNO_value24 + SVH_value24 + H_value24 + D_value24 + Fprum_value24 + Fmax_value24 + T_value24 +  SRA1H_value24 + SSV1H_value24 + T05_value24 +
-           SCE_value48 + SNO_value48 + SVH_value48 + H_value48 + D_value48 + Fprum_value48 + Fmax_value48 + T_value48 +  SRA1H_value48 + SSV1H_value48 + T05_value48 +
-           SCE_value72 + SNO_value72 + SVH_value72 + H_value72 + D_value72 + Fprum_value72 + Fmax_value72 + T_value72 +  SRA1H_value72 + SSV1H_value72 + T05_value72 +
-           SCE_value96 + SNO_value96 + SVH_value96 + H_value96 + D_value96 + Fprum_value96 + Fmax_value96 + T_value96 +  SRA1H_value96 + SSV1H_value96 + T05_value96 +
-           SCE_value120 + SNO_value120 + SVH_value120 + H_value120 + D_value120 + Fprum_value120 + Fmax_value120 + T_value120 +  SRA1H_value120 + SSV1H_value120 + T05_value120, data = adcast_C, family = 'binomial')
+#           SCE_value48 + SNO_value48 + SVH_value48 + H_value48 + D_value48 + Fprum_value48 + Fmax_value48 + T_value48 +  SRA1H_value48 + SSV1H_value48 + T05_value48 +
+#           SCE_value72 + SNO_value72 + SVH_value72 + H_value72 + D_value72 + Fprum_value72 + Fmax_value72 + T_value72 +  SRA1H_value72 + SSV1H_value72 + T05_value72 +
+#           SCE_value96 + SNO_value96 + SVH_value96 + H_value96 + D_value96 + Fprum_value96 + Fmax_value96 + T_value96 +  SRA1H_value96 + SSV1H_value96 + T05_value96 +
+#           SCE_value120 + SNO_value120 + SVH_value120 + H_value120 + D_value120 + Fprum_value120 + Fmax_value120 + T_value120 +  SRA1H_value120 + SSV1H_value120 + T05_value120, data = adcast_C, family = 'binomial')
 #summary (g2)
 
 #aval_melt$var <- aval_melt$variable <- NULL
