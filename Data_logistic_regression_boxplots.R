@@ -312,7 +312,7 @@ nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M6[[i]] = lm(dta$event ~ dta$SVH_value +  + dta$SNO_value48 + dta$T_value24 + dta$SRA1H_value120 + dta$SSV1H_value72 + dta[[new_candi[i]]] )
+  M6[[i]] = lm(dta$event ~ dta$SVH_value + dta$SNO_value48 + dta$T_value24 + dta$SRA1H_value120 + dta$SSV1H_value72 + dta[[new_candi[i]]] )
 }# best predictors for LOWEST AIC right now - dont know how to incorporate significant p value - right now I have mostly 0 p value
 
 sM6 = data.table(new_candi, aic = lapply(M6, AIC), lapply(M6, function(x)summary(x)$coe[2,3]))
@@ -324,7 +324,24 @@ sM6[,abs := abs(aic)]
 
 all_aic <- list(sm = sM, sm2 = sM2, sm3 = sM3, sm4 = sM4, sm5 = sM5, sm6 = sM6)
 saveRDS(all_aic, "./data/all_aic.rds")
+all_aic <- readRDS(file = "data/all_aic.rds")
 
+g1 <- glm(adcast_W$event ~ adcast_W$SVH_value + adcast_W$SNO_value48 + adcast_W$T_value24 + adcast_W$SRA1H_value120 + adcast_W$SSV1H_value72)
+
+install.packages("caret")
+library (caret)
+require(graphics)
+p1<- predict(g1, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
+
+install.packages("caret")
+library (caret)
+varImp(g1, scale = TRUE)
+
+
+install.packages("ResourceSelection")
+library(ResourceSelection)
+
+hoslem.test(g1$y, fitted(g1))
 
 # selection from all available variables the best predictors for cold events
 dta = data.table (adcast_C)
@@ -372,19 +389,27 @@ sM3_C[,abs := abs(aic)]
 
 
 M4 = list()
-candi = candi[candi!='SVH_value72']
+candi = candi[candi!='SVH_value120']
 nn = length(candi)
 new_candi = candi[5:nn]
 for (i in 1:length(new_candi)){
-  M4[[i]] = lm(dta$event ~ dta$RGLB1H_value96 + dta$Tdiff_value72 + dta$SVH_value72 + dta[[new_candi[i]]] )
+  M4[[i]] = lm(dta$event ~ dta$RGLB1H_value96 + dta$Tdiff_value72 + dta$SVH_value120 + dta[[new_candi[i]]] )
 }
-sM4_C = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,3] ))
+sM4_C = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,4]))
 sM4_C[, aic := unlist(aic)]
 sM4_C[, V3 := unlist(V3)]
 sM4_C[,abs := abs(aic)]
 
 # F is good in Ttest, p value not in aic  - insecure? SSV1H_value144
 
+all_aic_C <- list(sm = sM_C, sm2 = sM2_C, sm3 = sM3_C, sm4 = sM4_C)
+saveRDS(all_aic_C, "./data/all_aic_C.rds")
+all_aic_C <- readRDS(file = "data/all_aic_C.rds")
+
+g2 <- glm(adcast_C$event ~ adcast_C$RGLB1H_value96 + adcast_C$Tdiff_value72 + adcast_C$SVH_value120)
+p2<- predict(g2, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
+varImp(g2, scale = TRUE)
+hoslem.test(g2$y, fitted(g2))
 
 #g3 = glm(event ~ SCE_value24 + SNO_value24 + SVH_value24 + H_value24 + D_value24 + Fprum_value24 + Fmax_value24 + T_value24 +  SRA1H_value24 + SSV1H_value24 + T05_value24 +
 #           SCE_value48 + SNO_value48 + SVH_value48 + H_value48 + D_value48 + Fprum_value48 + Fmax_value48 + T_value48 +  SRA1H_value48 + SSV1H_value48 + T05_value48 +
