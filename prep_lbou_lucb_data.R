@@ -2,6 +2,8 @@ library(data.table)
 library(readr)
 library(zoo)
 
+################### AVAL DATA ######################
+
 Aval <- data.table(read_delim("./my_data/Aval_utf_8.txt", 
                               "\t", escape_double = FALSE, col_types = cols(A = col_character(), 
                                                                             B = col_character(), C = col_character(), 
@@ -44,6 +46,8 @@ aval_total_lbou <- rbind(aval_lbou, non_aval_lbou)
 aval_total_lucb$ID <- paste0("Aval ", 1:nrow(aval_total_lucb))
 aval_total_lbou$ID <- paste0("Aval ", 1:nrow(aval_total_lbou))
 
+########### METEO DATA ###############
+
 dta_lbou <- data.table(read_delim("./my_data/data_hourly_2004_2020.txt", 
                              "\t", escape_double = FALSE, col_types = cols(D = col_double(), 
                                                                            Fmax = col_double(), Fprum = col_double(), 
@@ -81,6 +85,8 @@ dta$date <- as.POSIXct(x = dates, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
 dta$DATE2 <- strtrim(x = as.character(dta$date), width = 10)
 dta$DATE2 <- as.POSIXct(paste(dta$date), format = "%Y-%m-%d")
+
+###### WARM COLD ######
 
 dta[datum > as.Date("2003-10-30") & datum <= as.Date("2004-03-06"), CAW:= "cold"]
 dta[datum >= as.Date("2004-03-07") & datum <= as.Date("2004-10-30"), CAW:= "warm"]
@@ -134,6 +140,8 @@ dta$date <- dta$datum <- NULL
 
 dta_melt <- melt(dta, id.vars = c("DATE2", "CAW", "stat"))
 
+############# ROLL DATA ###########
+
 hours <-  c(24,48,72,96,120,144)
 for (i in c(1:length(hours))){
   sum_colname <- paste0("value", hours[i], "_sum")
@@ -159,6 +167,8 @@ for (i in c(1:length(hours))){
 
 dta_melt <- rbind(dta_melt, aaa)
 
+############## FIVE DAYS LUCB #########
+
 aval_total_lucb <- aval_total_lucb[DATE_OFF >= dta_melt[stat == "LUCB", min(DATE2)] + 5*24*60*60, ]
 
 aval_lucb_list <- list()
@@ -176,6 +186,8 @@ for (i in 1:nrow(aval_total_lucb)){
 
 aval_lucb_dtafr <- rbindlist(aval_lucb_list)
 aval_lucb_dtafr <- merge(x = aval_lucb_dtafr, y = aval_total_lucb[,.(event,ID)], by = "ID")
+
+############## FIVE DAYS LBOU #########
 
 aval_total_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[stat == "LBOU", min(DATE2)] + 5*24*60*60, ]
 
@@ -204,3 +216,42 @@ aval_melt_total <- rbind(aval_lbou_melt, aval_lucb_melt)
 aval_melt_total[, var_name:= paste0(var, "_", variable)]
 
 saveRDS(object = aval_melt_total, file = "./my_data/lbou_lucb_data.rds")
+aval_melt_total <- readRDS(file = "./my_data/lbou_lucb_data.rds")
+
+adcast <- dcast.data.table(aval_melt_total, DATE2 + ID + PLOT + event + CAW + stat + event  ~ var_name, value.var = 'value')
+
+########### GLM LBOU #########################
+
+glm_data_lbou <- adcast[stat == "LBOU"]
+glm_data_lbou_W <- adcast[CAW == "warm"]
+glm_data_lbou_C <- adcast[CAW == "cold"]
+
+g_SCE_lbou <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lbou, family = 'binomial')
+
+g_T_lbou <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lbou_W, family = 'binomial')
+
+g_SRA1H_lbou <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lbou, family = 'binomial')
+
+g_SVH_lbou <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lbou_W, family = 'binomial')
+
+g_SNO_lbou <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lbou_W, family = 'binomial')
+
+g_SSV1H_lbou <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lbou_W, family = 'binomial')
+
+########### GLM LUCB #########################
+
+glm_data_lucb <- adcast[stat == "LUCB"]
+glm_data_lucb_W <- adcast[CAW == "warm"]
+glm_data_lucb_C <- adcast[CAW == "cold"]
+
+g_SCE_lucb <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lucb, family = 'binomial')
+
+g_T_lucb <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lucb_W, family = 'binomial')
+
+g_SRA1H_lucb <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lucb, family = 'binomial')
+
+g_SVH_lucb <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lucb_W, family = 'binomial')
+
+g_SNO_lucb <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lucb_W, family = 'binomial')
+
+g_SSV1H_lucb <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lucb_W, family = 'binomial')
