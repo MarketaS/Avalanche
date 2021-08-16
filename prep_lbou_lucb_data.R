@@ -325,6 +325,63 @@ sM6[, aic := unlist(aic)]
 sM6[, V3 := unlist(V3)]
 sM6[,abs := abs(aic)]
 
+# selection from all available variables the best predictors for cold events
+dta = data.table (adcast_C)
+candi = names(dta)[-1]
+nn = length(candi)
+new_candi = candi[5:nn]
+M = list()
+for (i in 1:length(new_candi)){
+  print(i)
+  M[[i]] = lm(dta$event ~ dta[[new_candi[i]]])# the  predictor
+}
+
+sM_C = data.table(new_candi, aic = lapply(M, AIC), lapply(M, function(x)summary(x)$coe[2,3] ))
+sM_C[, aic := unlist(aic)]
+sM_C[, V3 := unlist(V3)]
+sM_C[,abs := abs(aic)]
+
+M2 = list()
+candi = candi[candi!='RGLB1H_value96']
+
+nn = length(candi)
+new_candi = candi[5:nn]
+for (i in 1:length(new_candi)){
+  M2[[i]] = lm(dta$event ~ dta$RGLB1H_value96 + dta[[new_candi[i]]] )
+}
+
+sM2_C = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[2,3] ))
+sM2_C[, aic := unlist(aic)]
+sM2_C[, V3 := unlist(V3)]
+sM2_C[,abs := abs(aic)]
+# RGLB_value24, RGLB_value24, Tdiff_value72, RGLB_value48_144
+
+M3 = list()
+candi = candi[candi!='Tdiff_value72']
+nn = length(candi)
+new_candi = candi[5:nn]
+for (i in 1:length(new_candi)){
+  M3[[i]] = lm(dta$event ~ dta$RGLB1H_value96 + dta$Tdiff_value72 + dta[[new_candi[i]]] )
+}
+
+sM3_C = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[2,3] ))
+sM3_C[, aic := unlist(aic)]
+sM3_C[, V3 := unlist(V3)]
+sM3_C[,abs := abs(aic)]
+
+
+M4 = list()
+candi = candi[candi!='SVH_value120']
+nn = length(candi)
+new_candi = candi[5:nn]
+for (i in 1:length(new_candi)){
+  M4[[i]] = lm(dta$event ~ dta$RGLB1H_value96 + dta$Tdiff_value72 + dta$SVH_value120 + dta[[new_candi[i]]] )
+}
+sM4_C = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,4]))
+sM4_C[, aic := unlist(aic)]
+sM4_C[, V3 := unlist(V3)]
+sM4_C[,abs := abs(aic)]
+
 g_SCE_lbou <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lbou, family = 'binomial')
 
 g_T_lbou <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lbou_W, family = 'binomial')
