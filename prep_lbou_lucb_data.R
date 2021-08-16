@@ -137,6 +137,8 @@ dta[datum >= as.Date("2019-11-1") & datum <= as.Date("2020-03-30"), CAW:= "cold"
 dta[datum >= as.Date("2020-03-31") & datum <= as.Date("2020-10-31"), CAW:= "warm"]
 
 dta$date <- dta$datum <- NULL
+dta$T05 <- NULL
+dta$SCE <- NULL
 
 dta_melt <- melt(dta, id.vars = c("DATE2", "CAW", "stat"))
 
