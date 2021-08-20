@@ -160,7 +160,7 @@ saveRDS(object = sub_dta2_LUCB_LBOU, file = "C:/Users/marketa.souckova/Documents
 
 LBOU_LUCB <- ggplot(aval_melt_total)+
   geom_line(aes(x = PLOT, y = value, color = stat))+
-  facet_wrap(~ var_name, scales = "free_y")+
+  facet_wrap(~ variable, scales = "free_y")+
   scale_x_reverse()
 saveRDS(object = aval_melt_total, file = "C:/Users/marketa.souckova/Documents/laviny/6dayprior_AD_LBOU_LUCB.rds")
 
