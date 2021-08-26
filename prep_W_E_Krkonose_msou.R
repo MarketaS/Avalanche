@@ -4,7 +4,6 @@ library(zoo)
 setwd ("c:/Users/marketa.souckova/Documents/laviny/")
 ################### AVAL DATA ######################
 
-setwd ("C:/Users/marketa.souckova/Documents/laviny/")
 Aval <- data.table(read_delim("./data/Aval_utf_8.txt", 
                               "\t", escape_double = FALSE, col_types = cols( A = col_character(), 
                                                                             B = col_character(), C = col_character(), 
@@ -439,7 +438,7 @@ sM5_C[,abs := abs(aic)]
 all_aic_C <- list(sm = sM_C, sm2 = sM2_C, sm3 = sM3_C, sm4 = sM4_C)
 saveRDS(all_aic_C, "./data/all_aic_C.rds")
 all_aic_C <- readRDS(file = "data/all_aic_C.rds")
-#  glm´model of 
+#  glm?model of 
 
 g2 <- glm(formula = event ~ SVH_value + SSV1H_value + Fprum_value + H_value72  + H_value96, data =glm_data_lbou_C, family = binomial)
 p2<- predict(g2, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
@@ -650,27 +649,3 @@ p4<- predict(g4, newdata = NULL, type="response", se.fit = FALSE, na.action = na
 varImp(g4, scale = TRUE)
 saveRDS(g4, "./data/varImp_W_LUCB.rds")
 
-g_SCE_lbou <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lbou, family = 'binomial')
-
-g_T_lbou <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SRA1H_lbou <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lbou, family = 'binomial')
-
-g_SVH_lbou <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SNO_lbou <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SSV1H_lbou <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lbou_W, family = 'binomial')
-
-
-g_SCE_lucb <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lucb, family = 'binomial')
-
-g_T_lucb <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lucb_W, family = 'binomial')
-
-g_SRA1H_lucb <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lucb, family = 'binomial')
-
-g_SVH_lucb <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lucb_W, family = 'binomial')
-
-g_SNO_lucb <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lucb_W, family = 'binomial')
-
-g_SSV1H_lucb <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lucb_W, family = 'binomial')
