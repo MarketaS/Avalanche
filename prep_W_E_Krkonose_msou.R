@@ -1,10 +1,9 @@
 library(data.table)
 library(readr)
 library(zoo)
-
+setwd ("c:/Users/marketa.souckova/Documents/laviny/")
 ################### AVAL DATA ######################
 
-setwd ("C:/Users/marketa.souckova/Documents/laviny/")
 Aval <- data.table(read_delim("./data/Aval_utf_8.txt", 
                               "\t", escape_double = FALSE, col_types = cols( A = col_character(), 
                                                                             B = col_character(), C = col_character(), 
@@ -24,6 +23,7 @@ Aval <- data.table(read_delim("./data/Aval_utf_8.txt",
                                                                             ranking = col_number(), season = col_character(), 
                                                                             year = col_number()), trim_ws = TRUE, locale = locale(encoding = "windows-1252")))
 problems(Aval)
+
 Aval$DATE2 <- strtrim(x = Aval$date, width = 10)
 Aval$DATE3 <- as.POSIXct(paste0(Aval$DATE2, " 07:00"), format = "%Y-%m-%d %H:%M")
 Aval$DATE_OFF <- as.POSIXct(Aval$DATE3 + (17*60*60))
@@ -38,6 +38,7 @@ aval_lucb <- aval_lucb[event == 1]
 
 non_aval_lucb <- Aval[year(DATE3) > 2008 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5)]
 non_aval_lbou <- Aval[year(DATE3) > 2003 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5)]
+
 non_aval_lbou[, locality:= "W"]
 non_aval_lucb[, locality:= "E"]
 
@@ -235,14 +236,14 @@ adcast <- dcast.data.table(aval_melt_total, DATE2 + ID + PLOT + event + CAW + st
 saveRDS(object = adcast, file = "./data/adcast_lbou_lucb_data.rds")
 #adcast <- readRDS(file = "./data/lbou_lucb_data.rds")
 adcast <- readRDS("C:/Users/marketa.souckova/OneDrive - CZU v Praze/R/Krkonose/Rcode/adcast.rds")
+
 ########### GLM LBOU #########################
 
 adcast$Tdiff_value <-  adcast$Tdiff_value24 <- adcast$Tdiff_value48 <- adcast$Tdiff_value72 <- adcast$Tdiff_value96  <- adcast$Tdiff_value120 <- adcast$Tdiff_value144 <- NULL
 glm_data_lbou <- adcast[stat == "LBOU"]
-glm_data_lbou_W <- adcast[CAW == "warm"]
-glm_data_lbou_C <- adcast[CAW == "cold"]
+glm_data_lbou_W <- glm_data_lbou[CAW == "warm"]
+glm_data_lbou_C <- glm_data_lbou[CAW == "cold"]
 
-glm_data_lucb <- adcast[stat == "LUCB"]#20/01/2021
 # selection from all available variables the best predictors for warm events
 dta = data.table(glm_data_lbou_W)
 candi = names(dta)[-1]
@@ -260,12 +261,12 @@ sM[, V3 := unlist(V3)]
 sM[,abs := abs(aic)]
 
 M2 = list()
-candi = candi[candi!='SVH_value']
+candi = candi[candi!='Fprum_value']
 nn = length(candi)
 new_candi = candi[7:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M2[[i]] = glm(dta$event ~ dta$SVH_value + dta[[new_candi[i]]] )
+  M2[[i]] = glm(dta$event ~ dta$Fprum_value + dta[[new_candi[i]]] )
 }
 
 sM2 = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[2,3]))
@@ -275,13 +276,13 @@ sM2[,abs := abs(aic)]
 
 M3 = list()
 # exclude already selected variable
-candi = candi[candi!='Fprum_value24']
+candi = candi[candi!='SVH_value']
 
 nn = length(candi)
 new_candi = candi[7:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M3[[i]] = glm(dta$event ~ dta$SVH_value + dta$Fprum_value24 + dta[[new_candi[i]]] )#building of already selected variables and others
+  M3[[i]] = glm(dta$event ~ dta$Fprum_value +  dta$SVH_value + dta[[new_candi[i]]] )#building of already selected variables and others
 }
 
 sM3 = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[2,3]))# i am not sure what position is coe [3,4]
@@ -291,13 +292,13 @@ sM3[,abs := abs(aic)]
 #write_xlsx(sM3, 'sM3.xlsx')
 
 M4 = list()
-candi = candi[candi!='SSV1H_value'] # eliminate already chosen predictor
+candi = candi[candi!='D_value24'] # eliminate already chosen predictor
 
 nn = length(candi)
 new_candi = candi[6:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M4[[i]] = glm(dta$event ~ dta$SVH_value +  dta$Fprum_value24 + dta$SSV1H_value + dta[[new_candi[i]]] )
+  M4[[i]] = glm(dta$event ~ dta$Fprum_value + dta$SVH_value + dta$D_value24 + dta[[new_candi[i]]] )
 }
 
 sM4 = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,3]))
@@ -308,13 +309,13 @@ sM4[,abs := abs(aic)]
 
 M5 = list()
 
-candi = candi[candi!='SRA1H_value'] #eliminate already chosen predictor
+candi = candi[candi!='SRA1H_value24'] #eliminate already chosen predictor
 
 nn = length(candi)
 new_candi = candi[7:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M5[[i]] = glm(dta$event ~ dta$SVH_value + dta$Fprum_value24 + dta$SSV1H_value + dta$SRA1H_value + dta[[new_candi[i]]] )
+  M5[[i]] = glm(dta$event ~  dta$Fprum_value + dta$SVH_value + dta$D_value24 +dta$SRA1H_value24 + dta[[new_candi[i]]] )
 }
 
 sM5 = data.table(new_candi, aic = lapply(M5, AIC), lapply(M5, function(x)summary(x)$coe[2,3]))
@@ -324,13 +325,13 @@ sM5[,abs := abs(aic)]
 #write_xlsx(sM5, 'sM5.xlsx')
 
 M6 = list()
-candi = candi[candi!='D_value96'] #eliminate already chosen predictor
+candi = candi[candi!='Fmax_value48'] #eliminate already chosen predictor
 
 nn = length(candi)
 new_candi = candi[7:nn]
 for (i in 1:length(new_candi)){
   print(i)
-  M6[[i]] = glm(dta$event ~ dta$SVH_value + dta$Fprum_value24 + dta$SSV1H_value + dta$SRA1H_value+ dta$D_value96 + dta[[new_candi[i]]] )
+  M6[[i]] = glm(dta$event ~  dta$Fprum_value + dta$SVH_value + dta$D_value24 +dta$SRA1H_value24 +dta$Fmax_value48 + dta[[new_candi[i]]] )
 }
 # best predictors for LOWEST AIC right now 
 
@@ -338,17 +339,17 @@ sM6 = data.table(new_candi, aic = lapply(M6, AIC), lapply(M6, function(x)summary
 sM6[, aic := unlist(aic)]
 sM6[, V3 := unlist(V3)]
 sM6[,abs := abs(aic)]
-#write_xlsx(sM6, 'sM6.xlsx') Fprum_value144 is the 6th best predictor
+#write_xlsx(sM6, 'sM6.xlsx') SSV1H_value48 is the 6th best predictor
 
 
 all_aic <- list(sm = sM, sm2 = sM2, sm3 = sM3, sm4 = sM4, sm5 = sM5, sm6 = sM6)
 saveRDS(all_aic, "./data/all_aic_W.rds")
 all_aic <- readRDS(file = "data/all_aic.rds")
 
-g1 <- glm(formula = event ~ SVH_value + Fprum_value24 + SSV1H_value + SRA1H_value + D_value96, data =glm_data_lbou_W, family = binomial)
+g1 <- glm(formula = event ~ Fprum_value +SVH_value + D_value24 + SRA1H_value24 + Fmax_value48, data =glm_data_lbou_W, family = binomial)
 summary (g1)
-#g3 <- glm(adcast_W$event ~ adcast_W$T_value48 + adcast_W$SRA1H_value24 + adcast_W$RGLB1H_value72 + adcast_W$SVH_value + adcast_W$SNO_value48)
-
+#g3 <- glm(adcast_W$event ~ adcast_W$T_value48 + adcast_W$SRA1H_value24 + 
+#+adcast_W$RGLB1H_value72 + adcast_W$SVH_value + adcast_W$SNO_value48)
 
 install.packages("caret")
 library (caret)
@@ -361,7 +362,7 @@ saveRDS(g1, "./data/varImp_W.rds")
 install.packages("ResourceSelection")
 library(ResourceSelection)
 
-hoslem.test(glm_data_lbou_W$event, fitted(g1))
+hoslem.test($y, fitted(g1))
 
 # selection from all available variables the best predictors for cold events
 dta = data.table (glm_data_lbou_C)
@@ -407,7 +408,6 @@ sM3_C[, aic := unlist(aic)]
 sM3_C[, V3 := unlist(V3)]
 sM3_C[,abs := abs(aic)]
 
-
 M4 = list()
 candi = candi[candi!='Fprum_value']
 nn = length(candi)
@@ -436,43 +436,216 @@ sM5_C[,abs := abs(aic)]
 # H_value96
 
 all_aic_C <- list(sm = sM_C, sm2 = sM2_C, sm3 = sM3_C, sm4 = sM4_C)
-all_aic_C <- data.frame(all_aic_C)
 saveRDS(all_aic_C, "./data/all_aic_C.rds")
 all_aic_C <- readRDS(file = "data/all_aic_C.rds")
-#  glm´model of 
-g2 <- glm(glm_data_lbou_C$event ~ glm_data_lbou_C$SVH_value + glm_data_lbou_C$SSV1H_value + glm_data_lbou_C$Fprum_value + glm_data_lbou_C$H_value72 + glm_data_lbou_C$H_value96)
+#  glm?model of 
 
+g2 <- glm(formula = event ~ SVH_value + SSV1H_value + Fprum_value + H_value72  + H_value96, data =glm_data_lbou_C, family = binomial)
 p2<- predict(g2, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
+summary (g2)
 varImp(g2, scale = TRUE)
 hoslem.test(g2$y, fitted(g2))
 
-
-g_SCE_lbou <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lbou, family = 'binomial')
-
-g_T_lbou <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SRA1H_lbou <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lbou, family = 'binomial')
-
-g_SVH_lbou <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SNO_lbou <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lbou_W, family = 'binomial')
-
-g_SSV1H_lbou <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lbou_W, family = 'binomial')
-
 ########### GLM LUCB #########################
+adcast$Tdiff_value <-  adcast$Tdiff_value24 <- adcast$Tdiff_value48 <- adcast$Tdiff_value72 <- adcast$Tdiff_value96  <- adcast$Tdiff_value120 <- adcast$Tdiff_value144 <- NULL
+
 
 glm_data_lucb <- adcast[stat == "LUCB"]
-glm_data_lucb_W <- adcast[CAW == "warm"]
-glm_data_lucb_C <- adcast[CAW == "cold"]
+glm_data_lucb_W <- glm_data_lucb[CAW == "warm"]
+glm_data_lucb_C <- glm_data_lucb[CAW == "cold"]
 
-g_SCE_lucb <- glm(event ~ SCE_value + SCE_value24 + SCE_value48 + SCE_value72 + SCE_value96 + SCE_value120 + SCE_value144, data = glm_data_lucb, family = 'binomial')
+dta = data.table(glm_data_lucb_W)
+candi = names(dta)[-1]
+nn = length(candi)
+new_candi = candi[7:nn]
+M = list()
+for (i in 1:length(new_candi)){
+  print(i)
+  M[[i]] = glm(dta$event ~ dta[[new_candi[i]]])# the  predictor
+}
 
-g_T_lucb <- glm(event ~  T_value + T_value24 + T_value48 + T_value72 + T_value96 + T_value120 + T_value144, data = glm_data_lucb_W, family = 'binomial')
+sM = data.table(new_candi, aic = lapply(M, AIC), lapply(M, function(x)summary(x)$coe[2,3]))
+sM[, aic := unlist(aic)]
+sM[, V3 := unlist(V3)]
+sM[,abs := abs(aic)]
 
-g_SRA1H_lucb <- glm(event ~ SRA1H_value +SRA1H_value24 + SRA1H_value48 + SRA1H_value72 + SRA1H_value96 + SRA1H_value120 + + SRA1H_value144, data = glm_data_lucb, family = 'binomial')
+M2 = list()
+candi = candi[candi!='SVH_value']
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  print(i)
+  M2[[i]] = glm(dta$event ~ dta$SVH_value + dta[[new_candi[i]]] )
+}
 
-g_SVH_lucb <- glm(event ~ SVH_value + SVH_value24 + SVH_value48 + SVH_value72 + SVH_value96 + SVH_value120 + SVH_value144, data = glm_data_lucb_W, family = 'binomial')
+sM2 = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[2,3]))
+sM2[, aic := unlist(aic)]
+sM2[, V3 := unlist(V3)]
+sM2[,abs := abs(aic)]
 
-g_SNO_lucb <- glm(event ~ SNO_value + SNO_value24 + SNO_value48 + SNO_value72 + SNO_value96 + SNO_value120 + SNO_value144, data = glm_data_lucb_W, family = 'binomial')
+M3 = list()
+# exclude already selected variable
+candi = candi[candi!='T_value48']
 
-g_SSV1H_lucb <- glm(event ~ SSV1H_value + SSV1H_value24 + SSV1H_value48 + SSV1H_value72 + SSV1H_value96 + SSV1H_value120 + SSV1H_value144, data = glm_data_lucb_W, family = 'binomial')
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  print(i)
+  M3[[i]] = glm(dta$event ~ dta$SVH_value + dta$T_value48 + dta[[new_candi[i]]] )#building of already selected variables and others
+}
+
+sM3 = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[2,3]))# i am not sure what position is coe [3,4]
+sM3[, aic := unlist(aic)]
+sM3[, V3 := unlist(V3)]
+sM3[,abs := abs(aic)]
+#write_xlsx(sM3, 'sM3.xlsx')
+
+M4 = list()
+candi = candi[candi!='D_value96'] # eliminate already chosen predictor
+
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  print(i)
+  M4[[i]] = glm(dta$event ~ dta$SVH_value +  dta$T_value48 + dta$D_value96 + dta[[new_candi[i]]] )
+}
+
+sM4 = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,3]))
+sM4[, aic := unlist(aic)]
+sM4[, V3 := unlist(V3)]
+sM4[,abs := abs(aic)]
+#write_xlsx(sM4, 'sM4.xlsx')
+
+M5 = list()
+
+candi = candi[candi!='SSV1H_value24'] #eliminate already chosen predictor
+
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  print(i)
+  M5[[i]] = glm(dta$event ~ dta$SVH_value +  dta$T_value48 + dta$D_value96  + dta$SSV1H_value24 + dta[[new_candi[i]]] )
+}
+
+sM5 = data.table(new_candi, aic = lapply(M5, AIC), lapply(M5, function(x)summary(x)$coe[2,3]))
+sM5[, aic := unlist(aic)]
+sM5[, V3 := unlist(V3)]
+sM5[,abs := abs(aic)]
+
+#SVH_value120
+
+M6 = list()
+candi = candi[candi!='SVH_value120'] #eliminate already chosen predictor
+
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  print(i)
+  M6[[i]] = glm(dta$event ~ dta$SVH_value +  dta$T_value48 + dta$D_value96  + dta$SSV1H_value24 + dta$SVH_value120 + dta[[new_candi[i]]] )
+}
+# best predictors for LOWEST AIC right now 
+
+sM6 = data.table(new_candi, aic = lapply(M6, AIC), lapply(M6, function(x)summary(x)$coe[2,3]))
+sM6[, aic := unlist(aic)]
+sM6[, V3 := unlist(V3)]
+sM6[,abs := abs(aic)]
+
+all_aic <- list(sm = sM, sm2 = sM2, sm3 = sM3, sm4 = sM4, sm5 = sM5, sm6 = sM6)
+saveRDS(all_aic, "./data/all_aic_LUCB_W.rds")
+all_aic_LUCB <- readRDS(file = "data/all_aic_LUCB_W.rds")
+
+g3 <- glm(formula = event ~ SVH_value+ T_value48+ D_value96+ SSV1H_value24 + SVH_value120, data =glm_data_lucb_W, family = binomial)
+summary (g3)
+
+p3<- predict(g3, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
+
+varImp(g3, scale = TRUE)
+saveRDS(g3, "./data/varImp_W_LUCB.rds")
+
+install.packages("ResourceSelection")
+library(ResourceSelection)
+
+#hoslem.test($y, fitted(g1))
+
+# selection from all available variables the best predictors for cold events
+dta = data.table (glm_data_lucb_C)
+candi = names(dta)[-1]
+nn = length(candi)
+new_candi = candi[7:nn]
+M = list()
+for (i in 1:length(new_candi)){
+  print(i)
+  M[[i]] = glm(dta$event ~ dta[[new_candi[i]]])# the  predictor
+}
+
+sM_C = data.table(new_candi, aic = lapply(M, AIC), lapply(M, function(x)summary(x)$coe[2,3] ))
+sM_C[, aic := unlist(aic)]
+sM_C[, V3 := unlist(V3)]
+sM_C[,abs := abs(aic)]
+
+M2 = list()
+candi = candi[candi!='H_value144']
+
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  M2[[i]] = glm(dta$event ~ dta$H_value144 + dta[[new_candi[i]]] )
+}
+
+sM2_C = data.table(new_candi, aic = lapply(M2, AIC), lapply(M2, function(x)summary(x)$coe[2,3] ))
+sM2_C[, aic := unlist(aic)]
+sM2_C[, V3 := unlist(V3)]
+sM2_C[,abs := abs(aic)]
+# RGLB_value24, RGLB_value24, Tdiff_value72, RGLB_value48_144
+
+M3 = list()
+candi = candi[candi!='SVH_value24']
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  M3[[i]] = glm(dta$event ~ dta$H_value144 + dta$SVH_value24 + dta[[new_candi[i]]] )
+}
+
+sM3_C = data.table(new_candi, aic = lapply(M3, AIC), lapply(M3, function(x)summary(x)$coe[2,3] ))
+sM3_C[, aic := unlist(aic)]
+sM3_C[, V3 := unlist(V3)]
+sM3_C[,abs := abs(aic)]
+
+M4 = list()
+candi = candi[candi!='Fprum_value24']
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  M4[[i]] = lm(dta$event ~  dta$H_value144 + dta$SVH_value24 + dta$Fprum_value24 + dta[[new_candi[i]]] )
+}
+sM4_C = data.table(new_candi, aic = lapply(M4, AIC), lapply(M4, function(x)summary(x)$coe[2,4]))
+sM4_C[, aic := unlist(aic)]
+sM4_C[, V3 := unlist(V3)]
+sM4_C[,abs := abs(aic)]
+
+
+M5 = list()
+candi = candi[candi!='Fmax_value144']
+nn = length(candi)
+new_candi = candi[7:nn]
+for (i in 1:length(new_candi)){
+  M5[[i]] = lm(dta$event ~ dta$H_value144 + dta$SVH_value24 + dta$Fprum_value24 + dta$Fmax_value144 + dta[[new_candi[i]]] )
+}
+sM5_C = data.table(new_candi, aic = lapply(M4, AIC), lapply(M5, function(x)summary(x)$coe[2,4]))
+sM5_C[, aic := unlist(aic)]
+sM5_C[, V3 := unlist(V3)]
+sM5_C[,abs := abs(aic)]
+
+#Fmax_value24
+all_aic_C <- list(sm = sM_C, sm2 = sM2_C, sm3 = sM3_C, sm4 = sM4_C)
+saveRDS(all_aic_C, "./data/all_aic_C_LUCB.rds")
+all_aic_C <- readRDS(file = "data/all_aic_C_LUCB.rds")
+
+g4 <- glm(formula = event ~ H_value144 + SVH_value24 + Fprum_value24 + Fmax_value144 + Fmax_value24, data =glm_data_lucb_C, family = binomial)
+summary (g4)
+
+p4<- predict(g4, newdata = NULL, type="response", se.fit = FALSE, na.action = na.pass)
+
+varImp(g4, scale = TRUE)
+saveRDS(g4, "./data/varImp_W_LUCB.rds")
+
