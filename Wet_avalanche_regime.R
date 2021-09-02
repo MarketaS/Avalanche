@@ -18,11 +18,15 @@ result.dir <- "D:/CESNET/Data_snih/Laviny_Krkonose/Avalanche_analysis/Results/"
 
 
 # Read up to date avlanche database
-Aval_61_21 <- data.table(read.table(paste0(data.dir,"Avalanche_event_1961_2021.csv"), sep = ',', header = T))
+#Aval_61_21 <- data.table(read.table(paste0(data.dir,"Avalanche_event_1961_2021.csv"), sep = ',', header = T))
+Aval_61_21 <- data.table(read.delim("D:/CESNET/Data_snih/Laviny_Krkonose/Avalanche_analysis/Scripts/Avalanche_Roman/Aval_utf_8.txt"))
 Aval_61_21[, date := as.Date(date)]
 Aval_61_21[, C := as.character(C)]
-
-
+Aval_61_21[, B := as.character(B)]
+Aval_61_21[, A := as.character(A)]
+Aval_61_21 <- Aval_61_21[, N := as.numeric(N)] # length of avalanche
+Aval_61_21 <- Aval_61_21[, M := as.numeric(M)] # width of avalanche
+Aval_61_21 <- Aval_61_21[, K := as.numeric(K)] # height of crown face
 
 #Merge Meteo Data with the Avalanche database
 #Aval_meteo <- merge(Daily_LBOU,Aval_61_21, by = 'date', all = T)
@@ -31,12 +35,6 @@ Aval_61_21[, C := as.character(C)]
 # New meteo part based on the script Meteo_Daily_CHMI.R #
 #########################################################
 
-# Merge temperature data for the West located Avalanche paths - Top stations 
-# 1962 - 1978: Vrbatka (H1VITK01); 1979 - 2020: Labska b. (H1LBOU01) 
-# 
-# T_West <- rbind(data.Vit[Variable == 'T'], data.Lab[Variable == 'T'])
-# T_West[, c('Sign','Variable') := NULL]
-# names(T_West) <- c('Date', 'T_west', 'Station_T_west')
 
 # separate East and West avalanche path according to the cadastr_number; 1-23, 38-40 East, 24-37 West 
 Aval_61_21[, cadastr_number := as.numeric(cadastr_number)] 
@@ -46,32 +44,39 @@ Aval_61_21[, position := ifelse(cadastr_number < 24 | cadastr_number > 37, 'East
 # Not continuous time series - only aval event dates
 # Exposure column needs to be checked with the real aval path shapefile
 # A-A column (added) is dedicated for the second part of A column (y), in case of format such as x_y, for details see email to Valin Spusta from 21.6.2021
-Aval_update <- data.table(read_excel(paste0(data.dir,"Lavinove Zaznamy_Krkonose_SpustaUpdate_2021_RJ.xlsx"), sheet = 'R_style', na = 'x'))
-Aval_update[,Date := as.Date(do.call(paste, c(.SD, sep = '-')), format = '%Y-%m-%d'), .SDcols = c('r','m','d')] # convert columns 'd' 'm' 'r' to date format
+# Aval_update <- data.table(read_excel(paste0(data.dir,"Lavinove Zaznamy_Krkonose_SpustaUpdate_2021_RJ.xlsx"), sheet = 'R_style', na = 'x'))
+# Aval_update[,Date := as.Date(do.call(paste, c(.SD, sep = '-')), format = '%Y-%m-%d'), .SDcols = c('r','m','d')] # convert columns 'd' 'm' 'r' to date format
+# 
+# Aval_update <- Aval_update[, N := as.numeric(N)] # length of avalanche
+# Aval_update <- Aval_update[, M := as.numeric(M)] # width of avalanche
+# Aval_update <- Aval_update[, K := as.numeric(K)] # height of crown face
 
-Aval_update <- Aval_update[, N := as.numeric(N)] # length of avalanche
-Aval_update <- Aval_update[, M := as.numeric(M)] # width of avalanche
-Aval_update <- Aval_update[, K := as.numeric(K)] # height of crown face
-
-Aval_1 <- Aval_update
+  Aval_1 <- Aval_61_21
 
 ##### AValanche Size estimation #####
 #####################################
+# 
+# Length_max <- Aval_1[,.(Max_Length = max(N, na.rm = T)), by = c("path_number")] # maximum avalanche length per path 
+# Width_max <- Aval_1[,.(max_width = max(L, na.rm = T)), by = c("path_number")] # width according to width of crown face
+# Trigger_max <- Aval_1[,.(max_crown = max(K, na.rm = T)), by = c("path_number")]
 
-Length_max <- Aval_1[,.(Max_Length = max(N, na.rm = T)), by = c("path_number")] # maximum avalanche length per path 
-Width_max <- Aval_1[,.(max_width = max(L, na.rm = T)), by = c("path_number")] # width according to width of crown face
-Trigger_max <- Aval_1[,.(max_crown = max(K, na.rm = T)), by = c("path_number")]
+Length_max <- Aval_1[,.(Max_Length = max(N, na.rm = T)), by = c("cadastr_number")] # maximum avalanche length per path 
+Width_max <- Aval_1[,.(max_width = max(L, na.rm = T)), by = c("cadastr_number")] # width according to width of crown face
+Trigger_max <- Aval_1[,.(max_crown = max(K, na.rm = T)), by = c("cadastr_number")]
 
 # create data.table only with the max dimmensions
 Aval_max_dimensions <- data.table(Length_max, Width_max[,max_width], Trigger_max[,max_crown])
 
 #Aval_database <- merge(x = Aval_1, y = Aval_max_dimensions, by = 'Path')
-Aval_database <- merge(x = Aval_1, y = Aval_max_dimensions, by = 'path_number')
+#Aval_database <- merge(x = Aval_1, y = Aval_max_dimensions, by = 'path_number')
+Aval_database <- merge(x = Aval_1, y = Aval_max_dimensions, by = 'cadastr_number')
 
 setnames(Aval_database, old = c('V2', 'V3'), new = c('Max_Width', 'Max_crown'))
 
 ##
-Aval_size <- data.table(Aval_database[, c('Date', 'path_number', 'path_letter', 'Season', 'K', 'L', 'N', 'C', 'Max_Length', 'Max_Width', 'Max_crown')])
+#Aval_size <- data.table(Aval_database[, c('Date', 'path_number', 'path_letter', 'Season', 'K', 'L', 'N', 'C', 'Max_Length', 'Max_Width', 'Max_crown')])
+Aval_size <- data.table(Aval_database[, c('date', 'cadastr_number', 'cadastr_letter', 'season', 'A', 'B','K', 'L', 'N', 'C', 'Max_Length', 'Max_Width', 'Max_crown')])
+setnames(Aval_size, 'date', 'Date')
 ##
 
 # Set avalanche size as a portion of maximum size (length/width) appeared in the particular path
@@ -129,24 +134,26 @@ Meteo_4Aval[, CumTemp5 := frollsum(Tair, Cum_window)]
 # Merging Avalanche and Meteo Data
 Aval_meteo <- merge(Aval_size, Meteo_4Aval, by = 'Date', all = T)
 
-View(Aval_meteo[Wet_aval_all == 'WetAll'])
 
 # Check the wet avalanche limits 
-summary(Aval_meteo[Wet_aval_all == 'WetAll'][,CumRain5_Ta])
+
 summary(Aval_meteo[C == 2][, CumRain5_Ta])
 summary(Aval_meteo[C == 2][, CumRain5_Tw])
 summary(Aval_meteo[C == 2][, CumTemp5])
 nrow(Aval_meteo[C == 2])
-nrow(Aval_meteo[Wet_aval_all == 'WetAll'])
+
 
 # Use the Wet avalanche limits for the further definition
-RainLimit <- 7
-TempLimit <- 0
-
+RainLimit <- 6.8
+TempLimit <- 0.2
 # Define wet avalanches based on rolling sums
-Aval_meteo[, Wet_aval_RainTw := ifelse((CumRain5_Ta >= RainLimit) & path_number >= 1, "WetRain", NA)]
-Aval_meteo[, Wet_aval_Temp := ifelse((CumTemp5 >= TempLimit) & path_number >= 1, "WetTemp", NA)]
-Aval_meteo[, Wet_aval_all := ifelse((CumRain5_Ta >= RainLimit | CumTemp5 >= TempLimit) & path_number >= 1, "WetAll", NA)]
+Aval_meteo[, Wet_aval_RainTw := ifelse((CumRain5_Ta >= RainLimit) & cadastr_number >= 1, "WetRain", NA)]
+Aval_meteo[, Wet_aval_Temp := ifelse((CumTemp5 >= TempLimit) & cadastr_number >= 1, "WetTemp", NA)]
+Aval_meteo[, Wet_aval_all := ifelse((CumRain5_Ta >= RainLimit | CumTemp5 >= TempLimit) & cadastr_number >= 1, "WetAll", NA)]
+
+summary(Aval_meteo[Wet_aval_all == 'WetAll'][,CumRain5_Ta])
+View(Aval_meteo[Wet_aval_all == 'WetAll'])
+nrow(Aval_meteo[Wet_aval_all == 'WetAll'])
 
 # Number of wet avalanches - different definitions/views
 
@@ -154,7 +161,12 @@ Nr_wet_aval = nrow(Aval_meteo[C == 2])
 Nr_wet_aval2 = nrow(Aval_meteo[Wet_aval_all == 'WetAll'])
 Nr_wet_aval3 = nrow(Aval_meteo[Wet_aval_RainTw == 'WetRain'])
 Nr_wet_aval4 = nrow(Aval_meteo[Wet_aval_Temp == 'WetTemp'])
+Nr_slab_aval = nrow(Aval_meteo[A == 3 | A == 4])
+Nr_cornice_aval = nrow(Aval_meteo[A == 5])
 
+
+
+# Plotting is in separate script "Plotting_avalanche_daily.R", following code is not necessary needed
 W.Aval_Count_C <- ggplot(data = Aval_meteo[C == 2], aes(x = Decade, fill = Size_categ_1)) +
   #geom_bar(position="dodge") +
   geom_bar(stat="count", position = 'stack', fill = "coral") +
