@@ -46,7 +46,7 @@ W.Aval_Snow_C <- ggplot(Aval_meteo[C == 2], aes(x = Decade, y = SCE)) +
   theme_classic() +
   ggtitle('Snow depth - Wet avalanche (C = 2)')
 
-grid.arrange(W.Aval_Count_C, W.Aval_CumRain_C, W.Aval_CumTemp_C, nrow = 3)
+grid.arrange(W.Aval_Count_C, W.Aval_CumRain_C, W.Aval_CumTemp_C,W.Aval_Snow_C, nrow = 4)
 
 
 # Wet avalanches according to C - size
