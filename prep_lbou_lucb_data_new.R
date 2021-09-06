@@ -147,7 +147,7 @@ dta$T05 <- NULL
 #dta$SCE <- NULL
 
 
-dta_melt <- melt(dta, id.vars = c("DATE2", "CAW", "stat"))
+dta_melt <- melt(dta, id.vars = c("DATE2", "CAW", "stat")) # this is probably not needed to change, since the needed for cycles are not using this dta for aval info
 saveRDS(dta_melt, "./my_data/dta_melt_new.rds")
 dta_melt <- readRDS(file = "./my_data/dta_melt_new.rds")
 ############# ROLL DATA ###########
@@ -180,8 +180,56 @@ dta_melt <- rbind(dta_melt, aaa)
 ############## FIVE DAYS LUCB #########
 
 aval_total_lucb <- aval_total_lucb[DATE_OFF >= dta_melt[stat == "LUCB", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31"), ]
+# Roman edit
+aval_total_C_lucb <- aval_total_lucb[DATE_OFF >= dta_melt[stat == "LUCB", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31") & C == 2, ]
+aval_total_A_lucb <- aval_total_lucb[DATE_OFF >= dta_melt[stat == "LUCB", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31") & (A == 2 | A == 3 | A == 4), ]
 
-aval_lucb_list <- list()
+## Wet avalanches LUCB, C = 2
+aval_lucb_C_list <- list()
+sloupec <- which(colnames(aval_total_C_lucb) == "ID")  # Order of column "ID"
+sloupec1 <- which(colnames(aval_total_C_lucb) == "DATE_OFF") # Order of column "DATE_OFF"
+
+for (i in 1:nrow(aval_total_C_lucb)){
+  id <- aval_total_C_lucb[i,ID]
+  start <- aval_total_C_lucb[i,DATE_OFF]
+  stop <- aval_total_C_lucb[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[stat == "LUCB" & DATE2 %between% c(stop[1], start[1]) ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lucb_C_list[[i]] <- dta_aval
+  print(i)
+  
+}
+#3052 > 2903
+aval_lucb_C_dtafr <- rbindlist(aval_lucb_C_list)
+aval_lucb_C_dtafr <- merge(x = aval_lucb_C_dtafr, y = aval_total_C_lucb[,.(event,ID)], by = "ID")
+
+#############
+
+## Slab avalanches LUCB, A = 2,3,4
+aval_lucb_A_list <- list()
+sloupec <- which(colnames(aval_total_A_lucb) == "ID")  # Order of column "ID"
+sloupec1 <- which(colnames(aval_total_A_lucb) == "DATE_OFF") # Order of column "DATE_OFF"
+
+for (i in 1:nrow(aval_total_A_lucb)){
+  id <- aval_total_A_lucb[i,ID]
+  start <- aval_total_A_lucb[i,DATE_OFF]
+  stop <- aval_total_A_lucb[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[stat == "LUCB" & DATE2 %between% c(stop[1], start[1]) ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lucb_A_list[[i]] <- dta_aval
+  print(i)
+  
+}
+#3052 > 2903
+aval_lucb_A_dtafr <- rbindlist(aval_lucb_A_list)
+aval_lucb_A_dtafr <- merge(x = aval_lucb_A_dtafr, y = aval_total_A_lucb[,.(event,ID)], by = "ID")
+
+#############
+
+#### All avalanches together LUCB - original
+aval_lucb_list <- list() 
 sloupec <- which(colnames(aval_total_lbou) == "ID")
 sloupec1 <- which(colnames(aval_total_lbou) == "DATE_OFF")
 for (i in 1:nrow(aval_total_lucb)){
@@ -202,8 +250,57 @@ aval_lucb_dtafr <- merge(x = aval_lucb_dtafr, y = aval_total_lucb[,.(event,ID)],
 ############## FIVE DAYS LBOU #########
 
 aval_total_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[stat == "LBOU", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31"), ]
+# Roman edit
+aval_total_C_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[stat == "LBOU", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31") & C == 2, ]
+aval_total_A_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[stat == "LBOU", min(DATE2)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31") & (A == 2 | A == 3 | A == 4), ]
 
-aval_lbou_list <- list()
+## Wet avalanches lbou, C = 2
+aval_lbou_C_list <- list()
+sloupec <- which(colnames(aval_total_C_lbou) == "ID")  # Order of column "ID"
+sloupec1 <- which(colnames(aval_total_C_lbou) == "DATE_OFF") # Order of column "DATE_OFF"
+
+for (i in 1:nrow(aval_total_C_lbou)){
+  id <- aval_total_C_lbou[i,ID]
+  start <- aval_total_C_lbou[i,DATE_OFF]
+  stop <- aval_total_C_lbou[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[stat == "LBOU" & DATE2 %between% c(stop[1], start[1]) ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lbou_C_list[[i]] <- dta_aval
+  print(i)
+  
+}
+#3052 > 2903
+aval_lbou_C_dtafr <- rbindlist(aval_lbou_C_list)
+aval_lbou_C_dtafr <- merge(x = aval_lbou_C_dtafr, y = aval_total_C_lbou[,.(event,ID)], by = "ID")
+
+#############
+
+## Slab avalanches lbou, A = 2,3,4
+aval_lbou_A_list <- list()
+sloupec <- which(colnames(aval_total_A_lbou) == "ID")  # Order of column "ID"
+sloupec1 <- which(colnames(aval_total_A_lbou) == "DATE_OFF") # Order of column "DATE_OFF"
+
+for (i in 1:nrow(aval_total_A_lbou)){
+  id <- aval_total_A_lbou[i,ID]
+  start <- aval_total_A_lbou[i,DATE_OFF]
+  stop <- aval_total_A_lbou[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[stat == "LBOU" & DATE2 %between% c(stop[1], start[1]) ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lbou_A_list[[i]] <- dta_aval
+  print(i)
+  
+}
+#3052 > 2903
+aval_lbou_A_dtafr <- rbindlist(aval_lbou_A_list)
+aval_lbou_A_dtafr <- merge(x = aval_lbou_A_dtafr, y = aval_total_A_lbou[,.(event,ID)], by = "ID")
+
+#############
+
+
+#### All avalanches together LBOU
+aval_lbou_list <- list() # upravit
 #change colum number to Aval Id
 sloupec <- which(colnames(aval_total_lbou) == "Aval ID")
 for (i in 1:nrow(aval_total_lbou)){
