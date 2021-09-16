@@ -68,7 +68,7 @@ aval_melt_lucb <- left_join(x = aval_melt_total[stat == "LUCB"], y = aval_total_
 aval_melt_abc <- rbind(aval_melt_lbou, aval_melt_lucb)
 
 saveRDS(aval_melt_abc, "./my_data/aval_melt_abc.rds")
-aval_melt_abc <- readRDS("./my_data/aval_melt_abc.rds")
+aval_melt_abc <- readRDS("./data/aval_melt_abc.rds")
 
 aval_melt_abc[var == "SCE", var:= "snow depth [cm]"] 
 aval_melt_abc[var == "SVH", var:= "snow water equivalent [mm]"] 
@@ -81,19 +81,20 @@ aval_melt_abc[var == "SSV1H", var:= "sun light duration [0.1/hour]"]
 aval_melt_abc[var == "T", var:= "air temperature [°C]"]
 aval_melt_abc[var == "Tdiff", var:= "air temperature difference [°C]"]
 aval_melt_abc[var == "H", var:= "relative air humidity [%]"]
+aval_melt_abc[var == "T05", var:= "soil temperature in 5 cm [%]"]
 
 #add in all [C == 2 & N > 100, ID]
 plot_wet <- aval_melt_abc[event == 1 & C == 2 & variable == "value", mean(value, na.rm = T), by = .(PLOT, stat, var, variable)]
-plot_slab <- aval_melt_abc[event == 1 & A %in% c(3, 4) & variable == "value", mean(value, na.rm = T), by = .(PLOT, stat, var, variable)]
-plot_over <- aval_melt_abc[event == 1 & A %in% c(5) & variable == "value", mean(value, na.rm = T), by = .(PLOT, stat, var, variable)]
+plot_slab <- aval_melt_abc[event == 1 & A %in% c(2,3,4) & variable == "value", mean(value, na.rm = T), by = .(PLOT, stat, var, variable)]
+#plot_over <- aval_melt_abc[event == 1 & A %in% c(5) & variable == "value", mean(value, na.rm = T), by = .(PLOT, stat, var, variable)]
 
 num_wet <- length(aval_melt_abc[event == 1 & C == 2 & variable == "value", unique(ID)])
-num_slab <- length(aval_melt_abc[event == 1 & A %in% c(2, 3) & variable == "value", unique(ID)])
-num_over <- length(aval_melt_abc[event == 1 & A %in% c(5) & variable == "value", unique(ID)])
+num_slab <- length(aval_melt_abc[event == 1 & A %in% c(2, 3, 4) & variable == "value", unique(ID)])
+#num_over <- length(aval_melt_abc[event == 1 & A %in% c(5) & variable == "value", unique(ID)])
 
 plot_wet$variable <- NULL
 plot_slab$variable <- NULL
-plot_over$variable <- NULL
+#plot_over$variable <- NULL
 
 ggplot(plot_wet)+
   geom_line(aes(x = PLOT, y = V1, color = stat), alpha = 0.5)+
