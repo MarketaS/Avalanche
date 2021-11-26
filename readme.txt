@@ -1,0 +1,4 @@
+adcast_A_daily_aval_days
+596
+adcast_C_daily_aval_days
+176
