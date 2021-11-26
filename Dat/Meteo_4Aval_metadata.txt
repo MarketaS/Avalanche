@@ -1,0 +1,37 @@
+Meteo_4Aval - Variable description
+----------------------------------
+Station code
+------------
+H1VITK01 - Vítkovice/Vrbatova bouda
+H1LBOU01 - Labska bouda
+P2HARR01 - Harrachov
+
+We include for the whole year, so winter and summer period are not separated
+
+
+F - wind speed [m/s] , measured
+Station_F - Meteo station providing the F data (1962-1978 -> Vitkovice, 1979-2020 -> Labska)
+
+SCE - Total snow depth [cm], measured
+Station_SCE - Meteo station providing the SCE data (1961-2020 -> Labska, gaps -> Vitkovice)
+
+SNO - Fresh snow depth [cm], measured
+Station_SNO - Meteo station providing the SCE data (1961-2020 -> Labska, gaps -> Vitkovice)
+
+SSV - Sunshine duration [hours], measured
+Station_SSV - Meteo station providing the SSV data (1962-1978 -> Vitkovice, 1979-2020 -> Labska)
+
+SRA - Total precipitation [mm], measured
+Station_SRA - Meteo station providing the SRA data (1962-1978 -> Vitkovice, 1979-2020 -> Labska)
+
+Tair - Air temperature in 2m [°C], measured/calculated (always dedicated to Labska)
+Tair_note - measured/calculated (based on lapse rate (T_grad) between Harrachov and Vitkovice, 1962-1978 -> Calculated, 1979-2020 -> Measured)
+
+H - relative humidity [%], measured/calculated (always dedicated to Labska)
+H_note - measured/calculated (based on lm Harrachov~Labska , 1962-1978 -> Calculated, 1979-2020 -> Measured)
+Station_H - 1962-1978 -> Harrachov (recalculated), 1979-2020 -> Labska 
+
+Rain_Tw [°C]- rain based on wet bulb temperature (calculated according to Stull formnula (https://doi.org/10.1175/JAMC-D-11-0143.1)), Thershold temperature = -0.5°C
+
+Rain_Ta [°C] - rain based on air temperature (Tair),  Thershold temperature = +0.46°C (based on Juras et al. 2021, under review)
+
