@@ -89,15 +89,13 @@ dta_all <- merge(x = dta_all, y = datum, by.x = "Date", by.y = "Date", all.y = T
 
 saveRDS(dta_all, file = "C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Dat/data_daily_1961_2020.rds")
 
-dta_all <- readRDS("C:/Users/marketa.souckova/OneDrive - CZU v Praze/R/Krkonose/Rcode/RDS/data_daily_1962_2020.rds")
-#dta_all <- readRDS("C:/Users/Marketa/OneDrive - CZU v Praze/R/Krkonose/Rcode/RDS/data_daily_1962_2020.rds")
-
+#dta_all <- readRDS("C:/Users/marketa.souckova/OneDrive - CZU v Praze/R/Krkonose/Rcode/RDS/data_daily_1962_2020.rds")
 
 dta_all <- readRDS("./data_daily_1961_2020.rds")
 
 
 #colnames(dta_all)[which(colnames(dta_all) == "D_mean")] <- "WD"
-dta_all <- dta_all[Date >= as.Date("1962-07-01")]# je toto spravn??
+dta_all <- dta_all[Date >= as.Date("1962-07-01")]# 
 
 ################# WARM COLD ##################
 setwd ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Krkonose/laviny/daily")
@@ -137,7 +135,7 @@ dta_all$CAW <- NULL
 colnames(dta_all)[ncol(dta_all)] <- "CAW"
 
 dta_melt <- melt(dta_all, id.vars = c("Date", "CAW")) 
-setwd ("C:/Users/Marketa/OneDrive - ?ZU v Praze/R/Krkonose/Rcode/RDS/")
+setwd ("C:/Users/Marketa/OneDrive - CZU v Praze/R/Krkonose/Rcode/RDS/")
 
 saveRDS(dta_melt, "./dta_melt_daily.rds")
 dta_melt <- readRDS(file = "./dta_melt_daily.rds")
@@ -212,7 +210,7 @@ for (i in 1:nrow(aval_total_A_lucb)){
   
 }
 #11360
-??? <- rbindlist(aval_lucb_A_list)
+aval_lucb_A_dtafr <- rbindlist(aval_lucb_A_list)
 aval_lucb_A_dtafr <- merge(x = aval_lucb_A_dtafr, y = aval_total_A_lucb[,.(event,ID)], by = "ID")
 
 #############
