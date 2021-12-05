@@ -2,6 +2,7 @@ library(data.table)
 library(readr)
 library(zoo)
 library(circular)
+library (readxl)
 
 circ <- function(x){
   a <- mean(circular(x, units = 'degrees'), na.rm = T)[[1]]
@@ -9,10 +10,10 @@ circ <- function(x){
   return(a)
 }
 
-
-setwd("D:/marketa2/marketa/Hourly_new")
+setwd <- ("c:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Dat/")
+#setwd("D:/marketa2/marketa/Hourly_new")
 ################### AVAL DATA ######################
-Aval <- data.table(read_delim("./data/Aval_utf_8.txt", 
+Aval <- data.table(read_delim("./Dat/Aval_utf_8.txt", 
                               "\t", escape_double = FALSE, col_types = cols( A = col_character(), 
                                                                              B = col_character(), C = col_character(), 
                                                                              D = col_character(), E = col_character(), 
@@ -30,7 +31,7 @@ Aval <- data.table(read_delim("./data/Aval_utf_8.txt",
                                                                              month = col_number(), notes = col_character(), 
                                                                              ranking = col_number(), season = col_character(), 
                                                                              year = col_number()), trim_ws = TRUE, locale = locale(encoding = "windows-1252")))
-problems(Aval)
+
 Aval <- Aval[!is.na(date)]
 
 Aval$DATE2 <- as.Date(strtrim(x = Aval$date, width = 10))
@@ -41,11 +42,11 @@ W_aval <- c(24:37)
 E_aval <- c(1,2,3,4, 5, 6, 7,8,9,10,11,12, 13,14,15,16,17,18,19,20,21,22,23,38,39)
 Aval[, locality := ifelse(cadastr_number %in% W_aval, 'W', 'E')]
 aval_lbou <- Aval[locality == "W",]
-#aval_lucb <- Aval[locality == "E",]
+aval_lucb <- Aval[locality == "E",]
 aval_lbou[event == 1]
-#aval_lucb <- aval_lucb[event == 1]
+aval_lucb <- aval_lucb[event == 1]
 
-#non_aval_lucb <- Aval[year(DATE3) > 2008 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
+non_aval_lucb <- Aval[year(DATE3) > 2003 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
 non_aval_lbou <- Aval[year(DATE3) > 2003 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
 
 dates <- list()
@@ -57,32 +58,37 @@ dates_fin <- unique(as.Date(unlist(dates)))
 
 non_aval_lbou <- non_aval_lbou[!DATE2 %in% dates_fin]
 
+dates <- list()
+for (i in 1:nrow(aval_lucb)){
+  a <- seq.Date(from = as.Date(aval_lucb[i, DATE2]) - 6, to = as.Date(aval_lucb[i, DATE2]) + 6, by = "day")
+  dates[[i]] <- a
+}
+dates_fin <- unique(as.Date(unlist(dates)))
+
 non_aval_lbou[, locality:= "W"]
-#non_aval_lucb[, locality:= "E"]
+non_aval_lucb[, locality:= "E"]
 
 aval_lbou <- aval_lbou[year(DATE3) > 2003]#194
-#aval_lucb <- aval_lucb[year(DATE3) > 2008]#85?
+aval_lucb <- aval_lucb[year(DATE3) > 2003]#178
 
-#aval_total_lucb <- rbind(aval_lucb, non_aval_lucb)#3161
-aval_total_lbou <- rbind(aval_lbou, non_aval_lbou)#4378
+aval_total_lucb <- rbind(aval_lucb, non_aval_lucb)#3649
+aval_total_lbou <- rbind(aval_lbou, non_aval_lbou)#4556
 
-#aval_total_lucb$ID <- paste0("Aval ", 1:nrow(aval_total_lucb))
+aval_total_lucb$ID <- paste0("Aval ", 1:nrow(aval_total_lucb))
+
 aval_total_lbou$ID <- paste0("Aval ", 1:nrow(aval_total_lbou))
 
 ########### METEO DATA ###############
-daily <- readRDS("D:/marketa2/marketa/data_daily_1962_2020.rds")
-daily <- readRDS ("D:/Users/Marketa/OneDrive - ÈZU v Praze/R/Krkonose/Rcode/RDS/data_daily_1962_2020.rds")
-daily<- data_daily_1962_2020
+#daily <- readRDS("D:/marketa2/marketa/data_daily_1962_2020.rds")
+daily <- readRDS ("C:/Users/Marketa/OneDrive - CZU v Praze/R/Avalanche/Dat/data_daily_1962_2020.rds")
 daily$UTC <- as.POSIXct(paste0(as.character(daily$Date), " 7:00:00"), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 daily <- daily[,c(3,4,13,14)]
 
-dta_lbou <- readRDS("D:/marketa2/marketa/Hourly_new/data/hourly_data_2004_2020.RDS")
-dta_lbou <- readRDS("C:/Users/Marketa/OneDrive - ÈZU v Praze/R/Krkonose/Rcode/hourly_data_2004_2020.RDS")
-
-dta_lbou <-hourly_data_2004_2020
+#dta_lbou <- readRDS("D:/marketa2/marketa/Hourly_new/data/hourly_data_2004_2020.RDS")
+dta_lbou <- readRDS("C:/Users/Marketa/OneDrive - CZU v Praze/R/Avalanche/Dat/hourly_data_2004_2020.RDS")
 
 colnames(dta_lbou) <- c("Date", "SD", "NSS", "SWE", "H", "WD", "WSavg","WSmax", "Tair", "P", "SLd", "time", "Date_min", "RBLB", "Tsoil05", "Rain_Tw", "Rain_Ta")
-dta_lbou$time <- dta_lbou$RBLB <- dta_lbou$time <- dta_lbou$Tsoil05 <-NULL
+dta_lbou$RBLB <- dta_lbou$time <- dta_lbou$Tsoil05 <-NULL
 
 dates <- gsub(pattern = " UTC", replacement = "", x = dta_lbou$Date_min)
 dta_lbou$UTC <- as.POSIXct(x = dates, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
@@ -102,15 +108,15 @@ dta_lbou$SWE[min(NonNAindexSWE):max(NonNAindexSWE)] <- na.approx(object = dta_lb
 ###### WARM COLD ######
 
 library(readxl)
-brks <- read_excel("D:/marketa2/marketa/W_C_events_dates_op.xlsx", 
-                   col_types = c("numeric", "text", "numeric", 
-                                 "numeric", "numeric", "text", "text", 
-                                 "text"))
+# brks <- read_excel("D:/marketa2/marketa/W_C_events_dates_op.xlsx", 
+#                    col_types = c("numeric", "text", "numeric", 
+#                                  "numeric", "numeric", "text", "text", 
+#                                  "text"))
 
-#brks <- read_excel("c:/Users/marketa.souckova/Documents/laviny/daily/W_C_events_dates_op.xlsx", 
-#                   col_types = c("numeric", "text", "numeric", 
-#                                 "numeric", "numeric", "text", "text", 
-#                                 "text", "text", "text", "text"))
+brks <- read_excel("C:/Users/Marketa/OneDrive - CZU v Praze/R/Avalanche/Dat/W_C_events_dates_op.xlsx",
+                  col_types = c("numeric", "text", "numeric",
+                                "numeric", "numeric", "text", "text",
+                                "text"))
 brks <- as.Date(brks$toR, format = "%Y-%m-%d")
 brks <- na.omit(brks)
 
@@ -131,8 +137,7 @@ dta_lbou[,.(min(as.Date(UTC)), max(as.Date(UTC))), by= .(CAW,CAW2)]
 
 dta_lbou$CAW <- NULL
 colnames(dta_lbou)[ncol(dta_lbou)] <- "CAW"
-#setwd ("c:/Users/marketa.souckova/Documents/laviny/")
-dta_melt <- melt(dta_lbou, id.vars = c("UTC", "CAW")) # this is probably not needed to change, since the needed for cycles are not using this dta for aval info
+dta_melt <- melt(dta_lbou, id.vars = c("UTC", "CAW"))
 
 ############# ROLL DATA ###########
 
@@ -158,13 +163,16 @@ for (i in c(1:length(hours))){
   print(hours[i])
 }
 
-############## FIVE DAYS LBOU #########
+############## SIX DAYS LBOU #########
 
 aval_total_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[, min(UTC)] + 5*24*60*60 & DATE_OFF <= as.POSIXct("2020-10-31"), ]
-# Roman edit
+# defining wet C=2 and slab = A
 aval_total_C_lbou <- aval_total_lbou[ C == 2 | event == 0, ]
 aval_total_A_lbou <- aval_total_lbou[ A %in% c(2, 3, 4) | event == 0, ]
 
+
+aval_total_C_lucb <- aval_total_lucb[ C == 2 | event == 0, ]
+aval_total_A_lucb <- aval_total_lucb[ A %in% c(2, 3, 4) | event == 0, ]
 ## Wet avalanches lbou, C = 2
 aval_lbou_C_list <- list()
 #sloupec <- which(colnames(aval_total_C_lbou) == "ID")  # Order of column "ID"
@@ -206,6 +214,44 @@ for (i in 1:nrow(aval_total_A_lbou)){
 
 aval_lbou_A_dtafr <- rbindlist(aval_lbou_A_list)
 aval_lbou_A_dtafr <- merge(x = aval_lbou_A_dtafr, y = aval_total_A_lbou[,.(event,ID)], by = "ID")
+
+## Wet avalanches lucb, C = 2
+aval_lucb_C_list <- list()
+
+for (i in 1:nrow(aval_total_C_lucb)){
+  id <- aval_total_C_lucb[i,ID]
+  start <- aval_total_C_lucb[i,DATE_OFF]
+  stop <- aval_total_C_lucb[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[ as.Date(UTC) %between% c(as.Date(stop[1]), as.Date(start[1])), ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lucb_C_list[[i]] <- dta_aval
+  print(i)
+  
+}
+
+aval_lucb_C_dtafr <- rbindlist(aval_lucb_C_list)
+aval_lucb_C_dtafr <- merge(x = aval_lucb_C_dtafr, y = aval_total_C_lucb[,.(event,ID)], by = "ID")
+
+#############
+
+## Slab avalanches lucb, A = 2,3,4
+aval_lucb_A_list <- list()
+
+for (i in 1:nrow(aval_total_A_lucb)){
+  id <- aval_total_A_lucb[i,ID]
+  start <- aval_total_A_lucb[i,DATE_OFF]
+  stop <- aval_total_A_lucb[i,DATE_OFF] - 5*24*60*60
+  dta_aval <- dta_melt[ as.Date(UTC) %between% c(as.Date(stop[1]), as.Date(start[1])) ]
+  dta_aval[, PLOT:= c(1:.N), by = variable]
+  dta_aval$ID <- id
+  aval_lucb_A_list[[i]] <- dta_aval
+  print(i)
+  
+}
+
+aval_lucb_A_dtafr <- rbindlist(aval_lucb_A_list)
+aval_lucb_A_dtafr <- merge(x = aval_lucb_A_dtafr, y = aval_total_A_lucb[,.(event,ID)], by = "ID")
 
 #############
 
