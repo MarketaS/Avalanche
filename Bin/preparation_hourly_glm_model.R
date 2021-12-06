@@ -41,12 +41,16 @@ Aval$DATE_OFF <- as.POSIXct(Aval$DATE3 + (17*60*60))
 W_aval <- c(24:37)
 E_aval <- c(1,2,3,4, 5, 6, 7,8,9,10,11,12, 13,14,15,16,17,18,19,20,21,22,23,38,39)
 Aval[, locality := ifelse(cadastr_number %in% W_aval, 'W', 'E')]
-aval_lbou <- Aval[locality == "W",]
-aval_lucb <- Aval[locality == "E",]
-aval_lbou[event == 1]
-aval_lucb <- aval_lucb[event == 1]
 
-non_aval_lucb <- Aval[year(DATE3) > 2003 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
+#aval_lbou <- Aval[locality == "W",]
+#aval_lucb <- Aval[locality == "E",]
+#Aval days from west and east Krkonoše
+aval_lbou <-Aval[event == 1]
+
+#aval_lbou <-aval_lbou[event == 1]
+#aval_lucb <- aval_lucb[event == 1]
+
+#non_aval_lucb <- Aval[year(DATE3) > 2008 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
 non_aval_lbou <- Aval[year(DATE3) > 2003 & month(DATE3) %in% c(10, 11, 12, 1, 2, 3, 4, 5) & event == 0,]
 
 dates <- list()
@@ -58,23 +62,23 @@ dates_fin <- unique(as.Date(unlist(dates)))
 
 non_aval_lbou <- non_aval_lbou[!DATE2 %in% dates_fin]
 
-dates <- list()
-for (i in 1:nrow(aval_lucb)){
-  a <- seq.Date(from = as.Date(aval_lucb[i, DATE2]) - 6, to = as.Date(aval_lucb[i, DATE2]) + 6, by = "day")
-  dates[[i]] <- a
-}
-dates_fin <- unique(as.Date(unlist(dates)))
+# dates <- list()
+# for (i in 1:nrow(aval_lucb)){
+#   a <- seq.Date(from = as.Date(aval_lucb[i, DATE2]) - 6, to = as.Date(aval_lucb[i, DATE2]) + 6, by = "day")
+#   dates[[i]] <- a
+# }
+# dates_fin <- unique(as.Date(unlist(dates)))
 
-non_aval_lbou[, locality:= "W"]
-non_aval_lucb[, locality:= "E"]
+# non_aval_lbou[, locality:= "W"]
+# non_aval_lucb[, locality:= "E"]
 
 aval_lbou <- aval_lbou[year(DATE3) > 2003]#194
-aval_lucb <- aval_lucb[year(DATE3) > 2003]#178
+#aval_lucb <- aval_lucb[year(DATE3) > 2003]#178
 
-aval_total_lucb <- rbind(aval_lucb, non_aval_lucb)#3649
+#aval_total_lucb <- rbind(aval_lucb, non_aval_lucb)#3649
 aval_total_lbou <- rbind(aval_lbou, non_aval_lbou)#4556
 
-aval_total_lucb$ID <- paste0("Aval ", 1:nrow(aval_total_lucb))
+#aval_total_lucb$ID <- paste0("Aval ", 1:nrow(aval_total_lucb))
 
 aval_total_lbou$ID <- paste0("Aval ", 1:nrow(aval_total_lbou))
 
@@ -170,13 +174,11 @@ aval_total_lbou <- aval_total_lbou[DATE_OFF >= dta_melt[, min(UTC)] + 5*24*60*60
 aval_total_C_lbou <- aval_total_lbou[ C == 2 | event == 0, ]
 aval_total_A_lbou <- aval_total_lbou[ A %in% c(2, 3, 4) | event == 0, ]
 
+# aval_total_C_lucb <- aval_total_lucb[ C == 2 | event == 0, ]
+# aval_total_A_lucb <- aval_total_lucb[ A %in% c(2, 3, 4) | event == 0, ]
 
-aval_total_C_lucb <- aval_total_lucb[ C == 2 | event == 0, ]
-aval_total_A_lucb <- aval_total_lucb[ A %in% c(2, 3, 4) | event == 0, ]
 ## Wet avalanches lbou, C = 2
 aval_lbou_C_list <- list()
-#sloupec <- which(colnames(aval_total_C_lbou) == "ID")  # Order of column "ID"
-#sloupec1 <- which(colnames(aval_total_C_lbou) == "DATE_OFF") # Order of column "DATE_OFF"
 
 for (i in 1:nrow(aval_total_C_lbou)){
   id <- aval_total_C_lbou[i,ID]
@@ -215,43 +217,6 @@ for (i in 1:nrow(aval_total_A_lbou)){
 aval_lbou_A_dtafr <- rbindlist(aval_lbou_A_list)
 aval_lbou_A_dtafr <- merge(x = aval_lbou_A_dtafr, y = aval_total_A_lbou[,.(event,ID)], by = "ID")
 
-## Wet avalanches lucb, C = 2
-aval_lucb_C_list <- list()
-
-for (i in 1:nrow(aval_total_C_lucb)){
-  id <- aval_total_C_lucb[i,ID]
-  start <- aval_total_C_lucb[i,DATE_OFF]
-  stop <- aval_total_C_lucb[i,DATE_OFF] - 5*24*60*60
-  dta_aval <- dta_melt[ as.Date(UTC) %between% c(as.Date(stop[1]), as.Date(start[1])), ]
-  dta_aval[, PLOT:= c(1:.N), by = variable]
-  dta_aval$ID <- id
-  aval_lucb_C_list[[i]] <- dta_aval
-  print(i)
-  
-}
-
-aval_lucb_C_dtafr <- rbindlist(aval_lucb_C_list)
-aval_lucb_C_dtafr <- merge(x = aval_lucb_C_dtafr, y = aval_total_C_lucb[,.(event,ID)], by = "ID")
-
-#############
-
-## Slab avalanches lucb, A = 2,3,4
-aval_lucb_A_list <- list()
-
-for (i in 1:nrow(aval_total_A_lucb)){
-  id <- aval_total_A_lucb[i,ID]
-  start <- aval_total_A_lucb[i,DATE_OFF]
-  stop <- aval_total_A_lucb[i,DATE_OFF] - 5*24*60*60
-  dta_aval <- dta_melt[ as.Date(UTC) %between% c(as.Date(stop[1]), as.Date(start[1])) ]
-  dta_aval[, PLOT:= c(1:.N), by = variable]
-  dta_aval$ID <- id
-  aval_lucb_A_list[[i]] <- dta_aval
-  print(i)
-  
-}
-
-aval_lucb_A_dtafr <- rbindlist(aval_lucb_A_list)
-aval_lucb_A_dtafr <- merge(x = aval_lucb_A_dtafr, y = aval_total_A_lucb[,.(event,ID)], by = "ID")
 
 #############
 
@@ -267,6 +232,6 @@ aval_lbou_A_melt[, var_name:= paste0(var, "_", variable)]
 
 adcast_A <- dcast.data.table(aval_lbou_A_melt, UTC + ID + PLOT + event + CAW + event  ~ var_name, value.var = 'value')
 adcast_C <- dcast.data.table(aval_lbou_C_melt, UTC + ID + PLOT + event + CAW + event  ~ var_name, value.var = 'value')
-
-saveRDS(object = adcast_A, file = "./data/adcast_A.rds")
-saveRDS(object = adcast_C, file = "./data/adcast_C.rds")
+setwd("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Bin/hourly/")
+saveRDS(object = adcast_A, file = "./adcast_A.rds")
+saveRDS(object = adcast_C, file = "./adcast_C.rds")
