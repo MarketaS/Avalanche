@@ -1,6 +1,6 @@
 library(data.table)
 
-dta_dir <- 'data12112021/'
+dta_dir <- ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Bin/hourly/")
 
 adcast_A <- readRDS(paste0(dta_dir, "adcast_A.rds"))
 
@@ -19,6 +19,7 @@ adcast_A_unique[,NSSsum144:= frollsum(NSS_value,144, align = "right", na.rm = T)
 adcast_A_unique[,Rain_Ta_sum72:= frollsum(Rain_Ta_value,72, align = "right", na.rm = T)]
 adcast_A_unique[,Rain_Ta_sum144:= frollsum(Rain_Ta_value,144, align = "right", na.rm = T)]
 adcast_A_unique[,Tmax72:= frollapply(Tair_value,72, max,  align = "right", na.rm = T)]
+warnings ()
 adcast_A_unique[,Tmax144:= frollapply(Tair_value,144, max,  align = "right", na.rm = T)]
 adcast_A_unique[,Tmin72:= frollapply(Tair_value,72, min,  align = "right", na.rm = T)]
 adcast_A_unique[,Tmin144:= frollapply(Tair_value,144, min,  align = "right", na.rm = T)]
@@ -53,8 +54,9 @@ adcast_A_unique <- subset(adcast_A_unique, select = -c(SD48,SD72,SD96,SD144,Date
 adcast_A_updated <- adcast_A_unique[keep == TRUE]
 names(adcast_A_updated)[1] <- "UTC"
 adcast_A_updated <- subset(adcast_A_updated, select = -c(keep))
-
-saveRDS(adcast_A_updated, file = 'adcast_A_upd.rds')
+setwd ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Bin/hourly/")
+saveRDS()
+saveRDS(adcast_A_updated, file = "adcast_A_hourly.rds")
 
 ## adcast_C
 adcast_C_sub <- subset(adcast_C, select = -c(ID, PLOT))
@@ -100,5 +102,6 @@ adcast_C_unique <- subset(adcast_C_unique, select = -c(SD48,SD72,SD96,SD144,Date
 adcast_C_updated <- adcast_C_unique[keep == TRUE]
 names(adcast_C_updated)[1] <- "UTC"
 adcast_C_updated <- subset(adcast_C_updated, select = -c(keep))
-
+setwd ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Bin/hourly/")
 saveRDS(adcast_C_updated, file = 'adcast_C_upd.rds')
+saveRDS(adcast_C_updated, "./adcast_C_upd.rds")
