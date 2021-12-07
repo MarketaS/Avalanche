@@ -6,7 +6,6 @@ setwd ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Krkonose/Rcode/RDS/")
 ################### AVAL DATA ######################
 
 aval <- data.table(read.table("c:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Krkonose/laviny/daily/avalanche_event1.txt", header = T, sep = "\t"))
-#aval <- data.table(read.table("c:/Users/Moravec/Desktop/avalanche_event1.txt", header = T, sep = "\t"))
 
 str(aval)
 aval$date <- as.character(aval$date)
