@@ -1,12 +1,11 @@
 library(data.table)
 
-dta_dir <- 'data12112021/'
 dta_dir <- ("C:/Users/souckovamarketa/OneDrive - CZU v Praze/R/Avalanche/Bin/daily/")
 adcast_A_daily <- readRDS(paste0(dta_dir, "adcast_A_daily.rds"))
 adcast_C_daily <- readRDS(paste0(dta_dir, "adcast_C_daily.rds"))
 
 ## adcast_A_daily
-adcast_A_daily_sub <- subset(adcast_A_daily, select = -c(ID, PLOT, stat))
+adcast_A_daily_sub <- subset(adcast_A_daily, select = -c(ID, PLOT))
 adcast_A_daily_unique <- unique(adcast_A_daily_sub) 
 adcast_A_daily_aval_days <- adcast_A_daily[event == 1, max(as.Date(Date)), .(ID)]
 names(adcast_A_daily_aval_days)[2] <- "Date"
@@ -100,5 +99,5 @@ adcast_C_daily_updated <- subset(adcast_C_daily_updated, select = -c(keep))
 saveRDS(adcast_C_daily_updated, file = 'adcast_C_daily_upd.rds')
 
 
-adcast_C_daily_updated2004 <- adcast_C_daily_updated[Date > as.Date('01.01.2004', format = '%d.%m.%Y')]
-adcast_A_daily_updated2004 <- adcast_A_daily_updated[Date > as.Date('01.01.2004', format = '%d.%m.%Y')]
+# adcast_C_daily_updated2004 <- adcast_C_daily_updated[Date > as.Date('01.01.2004', format = '%d.%m.%Y')]
+# adcast_A_daily_updated2004 <- adcast_A_daily_updated[Date > as.Date('01.01.2004', format = '%d.%m.%Y')]
