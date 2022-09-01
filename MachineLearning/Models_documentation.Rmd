@@ -1,5 +1,10 @@
 ---
 title: "**Avalanche prediction documentation**"
+# Created by @Krystof Dytrt,dytrtk@fzp.czu.cz
+# Data source @Valerian.Spusta, @CHMI
+# text edited by @Marketa.Souckova
+# For avalanche paper: Souckova et al. 2022
+
 output: 
   html_document:
     toc: true
@@ -27,7 +32,7 @@ knitr::opts_chunk$set(fig.width = 8.65, fig.align = 'right', message = FALSE, wa
 ```
 
 # **General information**
-This script provides information about the avalanche predictors triggering the avalanche and the differences between two types of avalanches: wet snow and slab avalanches. The two datasets were used for modeling the predictors using machine learning algorithms to obtain insights into what effects play a major role between two different types of avalanches.
+This script provides information about the avalanche predictors driving the avalanche release and the differences between two types of avalanches: wet snow and slab avalanches. The two datasets were used for modeling the predictors using machine learning algorithms to obtain insights into what effects play a major role between two different types of avalanches.
 
 
 ## **libraries used for modelling**
@@ -112,9 +117,9 @@ table(adcast_A$event)
 table(adcast_C$event)
 ```
 
-Datasets should not contain any null values. Therefore we excluded those and filtered out observations that started from 1979. The reason for filtering is that we can obtain cleaner datasets. SWE was measured once a week, so it could be biased in the following sections and the variables for six days before the avalanche event. Changing variables for modeling is possible to get even more accurate results. The following modeling sections aim to obtain reliable predictive models that can be altered by the variables.
+Datasets should not contain any null values. Therefore we excluded them and filtered out observations that started from 1979. The reason for filtering is that we can obtain cleaner datasets. SWE was measured once a week, so it could be biased in the following sections and the variables for six days before the avalanche event. Changing variables for modeling is possible to get even more accurate results. The following modeling sections aim to obtain reliable predictive models that can be altered by the variables.
 
-* input data are needed to be passed as the argument for file.choose function as we trained models on premise. (please specify the datasets by providing the file path before running the code, if you do not provide data input only code will be displayed in this report)
+* input data are needed to be passed as the argument for file.choose function as we trained models on premise. (please specify the datasets by providing the file path before running the code, if you do not provide data input, only code will be displayed in this report)
 
 
 # **Unsupervised Learning**
@@ -142,8 +147,7 @@ for (i in names(adcast_C)) {
 
 ```
 
-box plots of all the variables are the key to understand the statistical distribution of data. We checked the differences between the two groups we would like to predict.
-
+plots of all the variables are crucial for understanding the data's statistical distribution. We checked the differences between the two groups we would like to predict.
 
 
 ## **Hclust**
@@ -182,7 +186,7 @@ ggplot(hctree_C$height %>%
 plot(color_branches(hctree_C, k = 11))
 ```
 
-Hclustering was created to obtain information about the distance correlation variables. Screeplots were conducted to sort main clusters by colors. 
+Hclustering was created to obtain information about the distance of correlation variables. Screeplots were conducted to sort main clusters by colors. 
 
 ## **PCA**
 ```{r}
@@ -282,7 +286,7 @@ ggbiplot(prcomp(adcast_C[, 3:ncol(adcast_C)] %>%  select(!matches("3") & !c("Rai
 ```
 
 PCA suggests the main differences in data for both datasets. Both datasets are overpopulated with no avalanche events. The dominance is evident, and the avalanche events tend to be hidden in the PCA even though the main characteristics of avalanche events in some way persist. The population of avalanche events tends to play some role in specific directions, but it is hard to distinguish the primary deviations for both populations due to low numbers of avalanche events.
-The differences between both types of avalanches are comparable due to better-balanced data input. More data would be a beneficial factor in better understanding the avalanche triggers' key characteristics.
+The differences between both types of avalanches are comparable due to better-balanced data input. More data would be a beneficial factor in better understanding the avalanche trigger key characteristics.
 
 
 # **Test of the model fit**
@@ -291,10 +295,10 @@ randomForest(formula = event ~ ., data = adcast_A)
 randomForest(formula = event ~ ., data = adcast_C)
 ```
 The random forest classifier has a low error rate but cannot accurately predict the avalanche event. 
-RF predicts well the non-avalanche events but is unable to reflect the avalanches. This is mainly caused because of the unbalanced dataset that we provided for training the algorithm. Bootstrap that is the part of the RF compares, in most cases, the non-avalanche events with each other so the algorithm can predict when there is no avalanche. The avalanche information is hidden and cannot be predicted because it is not, in most cases, the part of the bootstrap selection, so the algorithm never classifies the avalanche events (or when it does, it is in a few insignificant cases). Thus we cannot predict avalanche events because it rarely selects the avalanche events for the decision trees before the bootstrap. 
+RF predicts well the non-avalanche events but is unable to reflect the avalanches. This is mainly caused because of the unbalanced dataset that we provided for training the algorithm. Bootstrap is the part of the RF compares, in most cases, the non-avalanche events with each other so the algorithm can predict when there is no avalanche. The avalanche information is hidden and cannot be predicted because it is not, in most cases, the part of the bootstrap selection, so the algorithm never classifies the avalanche events (or when it does, it is in a few insignificant cases). Thus we cannot predict avalanche events because it rarely selects the avalanche events for the decision trees before the bootstrap. 
 For better understanding, we do not compare non-avalanche events with avalanche events on decision trees because we select high probability events with no avalanche events from the bag. Therefore, we have low out of bag error and never accurately predict avalanche events.
 
-Solution to this is to create balanced dataset or weighted decision trees. 
+A solution to this is to create a balanced dataset or weighted decision trees. 
 
 # **Datasets balancing**
 Even though we will construct some supervised models in this part of the section, we are in a section called datasets balancing, which is prior to the final modeling. All the supervised techniques in this chapter are only for demonstration purposes, and the supervised learning chapter goes after.
@@ -418,7 +422,7 @@ DT_C
 ```
 
 ### DT assessment
-We had problems with evaluating our model because of the repeated observations for the testing process. If we generated stratification datasets on the event before splitting, we could upscale our datasets, and better use them for evaluation. 
+We had problems with evaluating our model because of the repeated observations for the testing process. If we generated stratification datasets on the event before splitting, we could upscale our datasets and better use them for evaluation. 
 
 ```{r}
 ### RF with upscaled datasets without stratification before splitting
@@ -426,7 +430,7 @@ randomForest(formula = event ~ ., data = adcast_A_ups)
 randomForest(formula = event ~ ., data = adcast_C_ups)
 ```
 
-An upscaled dataset is better than using the unbalanced datasets for DT and RF. The error rate decreased, and RF does not have the problem distinguishing between the two groups of events, and it seems to predict the avalanche event is highly accurate. However, this problem is that we have used a few observations to train and test the data. We used the same test data for the training (thanks to the upscale, we are pretty sure the same data went to train and the same for the test). That also means we predict on observations that are known for our model. If we wanted to get accurate results, we would have to split the train test set with strata on the event, then train and test our results and compare the model performance. The problem with this approach is that we do not have much data for splitting (especially for dataset_C).
+An upscaled dataset is better than using unbalanced datasets for DT and RF. The error rate decreased, and RF does not have the problem distinguishing between the two groups of events, and it seems to predict the avalanche event is highly accurate. However, this problem is that we have used a few observations to train and test the data. We used the same test data for the training (thanks to the upscale, we are pretty sure the same data went to train and the same for the test). That also means we predict on observations that are known for our model. If we wanted to get accurate results, we would have to split the train test set with strata on the event, then train and test our results and compare the model performance. The problem with this approach is that we do not have much data for splitting (especially for dataset_C).
 
 ```{r}
 ### Upscale with stratified observations for both train and test sets
@@ -618,14 +622,14 @@ DT_syn_C <- dt_all(frame_dt, train_C_synt, test_C_synt)
 DT_syn_C
 ```
 
-Synthetics data can be used for evaluation of the DT tree making this technique optimal solution for using DT. The predictability of DT is very high and we can use DT for our data with the power of DT to explain the DT tree process.
+Synthetics data can be used to evaluate the DT tree, making this technique an optimal solution for using DT. The predictability of DT is very high, and we can use DT for our data with the power of DT to explain the DT tree process.
 
 ```{r}
 randomForest(formula = event ~ ., data = adcast_synt_A)
 randomForest(formula = event ~ ., data = adcast_synt_C)
 ```
 
-RF classifier worse than with upscaled dataset but since we are more interested in the Variable importance plots (VIP). We can continue to train the algorithm. The DT tree will no longer be trained.
+RF classifier is worse than with upscaled dataset but since we are more interested in the Variable importance plots (VIP). We can continue to train the algorithm. The DT tree will no longer be trained.
 
 
 ### **Synthetic data closer kernel generation**
@@ -939,7 +943,7 @@ We can see that synthetic data closer to the kernel are much more predictable. O
 randomForest(formula = event ~ ., data = adcast_synt_AA)
 randomForest(formula = event ~ ., data = adcast_synt_CC)
 ```
-Due to promising results we will implement synthetic data closer to the kerner (datasets with AA and CC suffixes) for the following comparing and modelling sections.
+Due to promising results we will implement synthetic data closer to the kerner (datasets with AA and CC suffixes) for the following comparing and modeling sections.
 
 
 ## **statistical distribution to synthetics data**
@@ -1077,7 +1081,7 @@ Synthetic data follow statistical distribution of the input datasets. Some disto
 RF_it <- data.frame(model = letters[seq(1,7,1)],
                     ntree = c(250, 500, 800, 1000, 1500, 2000, 6000))
 
-### Tvorba elementů pro sběr dat z iterací
+### 
 models <- list()
 max_oobs <- c()
 var_imp <- list()
@@ -1284,7 +1288,7 @@ model_C_ALL <- randomForest(formula = event ~ .,
                             sampsize = rf_C_synt[[3]]$sampsize)
 ```
 
-Since we train RF we can use for evaluation train / test set. But for final model we can implement the whole dataset due to RF bootstrapping. Therefore we ended up with two models for each dataset. Again, CV would be beneficial. 
+As we train RF, we can use it for the evaluation train/test set. However, we can implement the whole dataset for the final model due to RF bootstrapping. Therefore we ended up with two models for each dataset. Again, CV would be beneficial. 
 
 ## **VIP**
 
@@ -1404,8 +1408,7 @@ conf_mat(in_pred_com_CC, truth = true_class, estimate = Pred)
 
 
 ```
-
-Our models predict avalanche events well but tend to predict events that were not marked as avalanche bad. In the real scenario we would falsely inform that there is a high probability of the avalanche events. This false information can be thought as warnings for future modelling. To get more accurate results we would need analyse data deeper. 
+Our models predict avalanche events well but tend to predict events that were not marked as avalanche bad. In the real scenario, we would falsely inform that there is a high probability of avalanche events. This false information can be thought of as a warning for future modeling. To get more accurate results, we would need to analyse data deeper. 
 
 
 
